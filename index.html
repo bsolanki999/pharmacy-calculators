@@ -1,0 +1,2763 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <meta name="mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <title>Pharmacy Calculator Suite</title>
+  <meta name="theme-color" content="#000000">
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body, html {
+      font-family: 'Courier New', monospace;
+      background: #000;
+      color: #fff;
+      height: 100%;
+      width: 100%;
+      overflow: hidden;
+      -webkit-user-select: none;
+      user-select: none;
+    }
+    .page-container {
+      display: none; /* All pages hidden by default */
+      flex-direction: column;
+      flex: 1;
+      width: 100%;
+      height: 100vh;
+      overflow: hidden;
+    }
+    
+    /* --- Main Menu Page --- */
+    #page-menu {
+      display: flex; /* This was my original intent for the menu */
+      align-items: center;
+      overflow-y: auto;           /* THIS element scrolls */
+      height: 100vh;              /* must be viewport-height for scrolling to work */
+      height: 100dvh;             /* better on mobile (accounts for browser bars) */
+      padding: 20px;
+      -webkit-overflow-scrolling: touch;
+    }
+    #page-menu .container {
+      flex: 0 0 auto;             /* natural height; don't stretch */
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      width: 100%;
+      max-width: 500px;
+      margin: auto;               /* centers when short, scrolls from top when tall */
+    }
+    #page-menu .header {
+      text-align: center;
+      margin-bottom: 20px; /* Reduced margin */
+      flex-shrink: 0;
+    }
+    
+    /* ASCII Art Removed */
+
+    #page-menu h1 {
+      color: #60a5fa;
+      font-size: 24px; /* Base size */
+      margin-bottom: 10px;
+      border-top: 3px solid #60a5fa;
+      border-bottom: 3px solid #60a5fa;
+      padding: 15px 0;
+    }
+    #page-menu .subtitle {
+      color: #22d3ee;
+      font-size: 14px; /* Base size */
+      margin-top: 10px;
+    }
+    /* Single-column numbered list */
+    #page-menu .menu {
+      width: 100%;
+      max-width: 500px;
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+      padding-bottom: 10px;
+    }
+    #page-menu .menu-item {
+      display: flex;
+      flex-direction: row;        /* number and title on one line */
+      align-items: center;
+      text-align: left;
+      min-height: 54px;
+      background: #1f2937;
+      color: #22d3ee;
+      text-decoration: none;
+      padding: 12px 16px;
+      border: 2px solid #374151;
+      border-radius: 8px;
+      font-size: 18px; /* Base size */
+      font-weight: bold;
+      transition: all 0.2s;
+    }
+    #page-menu .menu-item:active {
+      background: #374151;
+      transform: scale(0.98);
+    }
+    #page-menu .menu-item:hover {
+      border-color: #60a5fa;
+    }
+    #page-menu .number {
+      color: #60a5fa;
+      margin-right: 12px;
+      display: inline-block;
+      min-width: 30px;
+      font-size: 20px;
+    }
+    #page-menu .footer {
+      text-align: center;
+      padding: 20px;
+      color: #6b7280;
+      font-size: 12px;
+      flex-shrink: 0;
+    }
+    
+    /* --- Calculator Page --- */
+    #page-calculator {
+      /* display: flex; (set by JS) */
+      height: 100%;
+    }
+    #controls {
+      background: #1f2937;
+      padding: 8px 16px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      border-bottom: 1px solid #374151;
+      flex-shrink: 0;
+    }
+    #calc-title {
+      color: #60a5fa;
+      font-size: 16px;
+      font-weight: bold;
+      text-align: center;
+      flex: 1;
+      padding: 0 10px;
+    }
+    .btn-back {
+      background: #374151;
+      color: #22d3ee;
+      border: 1px solid #4b5563;
+      border-radius: 4px;
+      padding: 6px 16px;
+      font-size: 14px;
+      font-weight: bold;
+      cursor: pointer;
+      text-decoration: none;
+      display: inline-block;
+      white-space: nowrap;
+    }
+    .font-controls { display: flex; gap: 8px; flex-shrink: 0; }
+    .font-btn {
+      background: #374151;
+      color: #22d3ee;
+      border: 1px solid #4b5563;
+      border-radius: 4px;
+      padding: 4px 12px;
+      font-size: 14px;
+      font-weight: bold;
+      cursor: pointer;
+    }
+    #terminal {
+      flex: 1;
+      overflow-y: auto;
+      padding: 16px;
+      line-height: 1.4;
+      -webkit-overflow-scrolling: touch;
+      font-size: 16px; /* Base size, will be set by JS */
+    }
+    .line { white-space: pre-wrap; word-wrap: break-word; }
+    .blue { color: #60a5fa; }
+    .green { color: #4ade80; }
+    .cyan { color: #22d3ee; }
+    .yellow { color: #facc15; }
+    .red { color: #f87171; }
+    .white { color: #fff; }
+    .input-line { display: flex; align-items: center; margin-top: 8px; color: #fff; }
+    .cursor { background: #22d3ee; color: #000; padding: 0 4px; }
+    .blink { animation: blink 1s infinite; color: #22d3ee; margin-left: 4px; }
+    @keyframes blink { 0%, 50% { opacity: 1; } 51%, 100% { opacity: 0; } }
+    #keypad { 
+      background: #1f2937; 
+      padding: 16px; 
+      border-top: 1px solid #374151; 
+      flex-shrink: 0;
+    }
+    
+    /* --- Keypad Layouts --- */
+    .keypad-grid, .keypad-math-layout {
+      display: grid;
+      gap: 8px;
+      max-width: 500px;
+      margin: 0 auto;
+    }
+    
+    /* Default Keypad (4-col) */
+    .keypad-grid {
+      grid-template-columns: repeat(4, 1fr);
+      grid-template-rows: repeat(4, 1fr); /* ADDED: 4 rows */
+    }
+    
+    #keypad button {
+      background: #1f2937;
+      color: #22d3ee;
+      border: 2px solid #374151;
+      border-radius: 8px;
+      font-size: 20px;
+      font-weight: bold;
+      padding: 16px;
+      font-family: 'Courier New', monospace;
+      cursor: pointer;
+    }
+    .btn-backspace { color: #facc15; }
+    
+    /* Default Enter Button */
+    /* FIXED CSS TYPO and removed grid-row/grid-column */
+    .keypad-grid .btn-enter, .keypad-math-layout .btn-enter {
+      background: #2563eb;
+      border-color: #1d4ed8;
+      color: #fff;
+      grid-row: 2 / 5; /* NEW: Span 3 rows */
+      grid-column: 4; /* NEW: 4th column */
+    }
+
+    /* NEW Math Keypad Layout (4-col, 5-row) */
+    .keypad-math-layout {
+      grid-template-columns: repeat(4, 1fr);
+      grid-template-rows: repeat(5, 1fr); /* 5 rows */
+    }
+    .keypad-math-layout .btn-op {
+      background: #374151;
+      color: #facc15;
+      font-size: 24px;
+    }
+    .keypad-math-layout .btn-clear {
+      background: #374151;
+      color: #f87171; /* Red for Clear */
+      grid-column: 1 / 3; /* Span 2 cols */
+      font-size: 24px;
+    }
+    .keypad-math-layout .btn-enter-math {
+      background: #2563eb;
+      border-color: #1d4ed8;
+      color: #fff;
+      grid-column: 3 / 5; /* Span 2 cols */
+      font-size: 24px;
+    }
+    /* Hide the default enter button when in math mode */
+    .keypad-math-layout .btn-enter {
+      display: none;
+    }
+    
+  </style>
+</head>
+<body>
+
+  <!-- Main Menu Page -->
+  <div id="page-menu" class="page-container" style="display: block;">
+    <div class="container">
+      <div class="header">
+        <!-- ASCII Art Removed -->
+        <h1>PHARMACY CALCULATOR SUITE</h1>
+        <div class="subtitle">Select a Calculator</div>
+        <!-- ADDED FONT CONTROLS TO MENU -->
+        <div class="font-controls" style="margin-top: 20px; justify-content: center;">
+          <button class="font-btn" onclick="if(navigator.vibrate)navigator.vibrate(10);globalDecreaseFontSize()">A-</button>
+          <button class="font-btn" onclick="if(navigator.vibrate)navigator.vibrate(10);globalIncreaseFontSize()">A+</button>
+        </div>
+      </div>
+      
+      <div class="menu">
+        <a href="#" onclick="if(navigator.vibrate)navigator.vibrate(10);showPage('ratio'); return false;" class="menu-item">
+          <span class="number">1.</span> Cross Multiply Solver
+        </a>
+        <a href="#" onclick="if(navigator.vibrate)navigator.vibrate(10);showPage('mtaper'); return false;" class="menu-item">
+          <span class="number">2.</span> Med Taper Calculator
+        </a>
+        <a href="#" onclick="if(navigator.vibrate)navigator.vibrate(10);showPage('prednisone'); return false;" class="menu-item">
+          <span class="number">3.</span> Prednisone Taper
+        </a>
+        <a href="#" onclick="if(navigator.vibrate)navigator.vibrate(10);showPage('control'); return false;" class="menu-item">
+          <span class="number">4.</span> Control Substance Calculator
+        </a>
+        <a href="#" onclick="if(navigator.vibrate)navigator.vibrate(10);showPage('refill'); return false;" class="menu-item">
+          <span class="number">5.</span> Refill Calculator
+        </a>
+        <a href="#" onclick="if(navigator.vibrate)navigator.vibrate(10);showPage('priceadj'); return false;" class="menu-item">
+          <span class="number">6.</span> Med Cost Adjuster
+        </a>
+        <a href="#" onclick="if(navigator.vibrate)navigator.vibrate(10);showPage('estradiol'); return false;" class="menu-item">
+          <span class="number">7.</span> Estradiol Supply
+        </a>
+        <!-- NEW CALCULATOR -->
+        <a href="#" onclick="if(navigator.vibrate)navigator.vibrate(10);showPage('basicMath'); return false;" class="menu-item">
+          <span class="number">8.</span> Basic Math
+        </a>
+        <a href="#" onclick="if(navigator.vibrate)navigator.vibrate(10);showPage('lovenox'); return false;" class="menu-item">
+          <span class="number">9.</span> Lovenox Calculator
+        </a>
+      </div>
+    </div>
+    
+    <div class="footer">
+      Pharmacy Calculator Suite v1.21
+    </div>
+  </div>
+  
+  <!-- Calculator Page -->
+  <div id="page-calculator" class="page-container">
+    <div id="controls">
+      <a onclick="if(navigator.vibrate)navigator.vibrate(10);showPage('menu')" class="btn-back">← Menu (M)</a>
+      <h2 id="calc-title">Calculator</h2>
+      <div class="font-controls">
+        <!-- UPDATED TO CALL GLOBAL FUNCTIONS -->
+        <button class="font-btn" id="btn-copy" onclick="if(navigator.vibrate)navigator.vibrate(10);copyResults()">COPY</button>
+        <button class="font-btn" onclick="if(navigator.vibrate)navigator.vibrate(10);globalDecreaseFontSize()">A-</button>
+        <button class="font-btn" onclick="if(navigator.vibrate)navigator.vibrate(10);globalIncreaseFontSize()">A+</button>
+      </div>
+    </div>
+    <div id="terminal"></div>
+    <div id="keypad"></div>
+  </div>
+
+  <script>
+    // --- Global App Controller ---
+    var currentApp = null;
+    var terminal = document.getElementById('terminal');
+    var keypad = document.getElementById('keypad');
+    var calcTitle = document.getElementById('calc-title');
+    var pageMenu = document.getElementById('page-menu');
+    var pageCalculator = document.getElementById('page-calculator');
+    
+    var globalFontSize = 16; // <-- NEW GLOBAL VARIABLE
+    // Restore saved font size (persists across visits)
+    try {
+      var _savedFs = parseInt(localStorage.getItem('pcs_fontsize'), 10);
+      if (_savedFs >= 10 && _savedFs <= 28) globalFontSize = _savedFs;
+    } catch (e) {}
+    function saveFontSize() {
+      try { localStorage.setItem('pcs_fontsize', String(globalFontSize)); } catch (e) {}
+    }
+    
+    // --- ASCII Animation Removed ---
+
+    // NEW GLOBAL FUNCTIONS
+    function applyFontSize(size) {
+      // Apply to menu font for responsive menu items
+      var menu = document.getElementById('page-menu');
+      if (menu) {
+        // Apply to H1
+        var h1 = menu.querySelector('h1');
+        if (h1) h1.style.fontSize = (size * 1.5) + 'px'; // e.g., 16px -> 24px
+        
+        // Apply to subtitle
+        var subtitle = menu.querySelector('.subtitle');
+        if (subtitle) subtitle.style.fontSize = (size * 0.875) + 'px'; // e.g., 16px -> 14px
+        
+        // Apply to menu items
+        var menuItems = menu.querySelectorAll('.menu-item');
+        menuItems.forEach(function(item) {
+          item.style.fontSize = size + 'px';
+        });
+      }
+      
+      // Apply to calculator terminal
+      if (terminal) terminal.style.fontSize = size + 'px';
+    }
+    
+    function globalIncreaseFontSize() {
+      if (globalFontSize < 28) {
+        globalFontSize += 2;
+        applyFontSize(globalFontSize);
+        saveFontSize();
+      }
+    }
+    
+    function globalDecreaseFontSize() {
+      if (globalFontSize > 10) {
+        globalFontSize -= 2;
+        applyFontSize(globalFontSize);
+        saveFontSize();
+      }
+    }
+
+    // Apply initial font size on load
+    applyFontSize(globalFontSize);
+
+    function showPage(pageName) {
+      if (pageName === 'menu') {
+        pageMenu.style.display = 'flex'; // This should be 'flex'
+        pageCalculator.style.display = 'none';
+        if (currentApp) {
+          currentApp.handleEscape(); // Clear the calculator app
+          currentApp = null;
+        }
+        // Animation Removed
+      } else {
+        pageMenu.style.display = 'none';
+        pageCalculator.style.display = 'flex'; // This should be 'flex'
+        initCalculator(pageName);
+        // Animation Removed
+      }
+    }
+    
+    // Start on first load
+    showPage('menu');
+
+    // Global keyboard listener
+    document.addEventListener('keydown', function(e) {
+      
+      // Check if we are on the menu page
+      var menuDisplay = window.getComputedStyle(pageMenu).display;
+      if (menuDisplay === 'flex' || menuDisplay === 'block') {
+        if (e.key >= '1' && e.key <= '9') { // <-- UPDATED TO 9
+          e.preventDefault();
+          // Map keys 1-8 to their respective calculator names
+          var calculators = ['ratio', 'mtaper', 'prednisone', 'control', 'refill', 'priceadj', 'estradiol', 'basicMath', 'lovenox']; // <-- ADDED lovenox
+          var index = parseInt(e.key) - 1;
+          if (calculators[index]) {
+            showPage(calculators[index]);
+          }
+        }
+        return; // Don't process other keys on the menu
+      }
+
+      // If we're not on the menu, we must be in a calculator.
+      // Proceed with existing calculator key logic.
+      if (!currentApp) return; // Only apply to active calculator
+      
+      // Check for 'm' key to go to menu
+      if (e.key === 'm' || e.key === 'M') {
+        e.preventDefault();
+        showPage('menu');
+        return;
+      }
+      
+      // Check for operator keys ONLY for basicMath
+      if (currentApp && currentApp.getCalcName() === 'basicMath') {
+        if (e.key === '+' || e.key === '-' || e.key === '*' || e.key === '/') {
+          e.preventDefault();
+          currentApp.handleOp(e.key);
+          return;
+        }
+        // NEW: Handle 'c' key for clear
+        if (e.key === 'c' || e.key === 'C') {
+          e.preventDefault();
+          currentApp.handleClear();
+          return;
+        }
+      }
+      
+      // Pass other keys to the currentApp
+      if (e.key >= '0' && e.key <= '9') {
+        e.preventDefault();
+        currentApp.handleNumPad(e.key);
+      } else if (e.key === '.') {
+        e.preventDefault();
+        currentApp.handleDecimal();
+      } else if (e.key === 'Enter' || e.key === '=') { // Allow '=' for basic math
+        e.preventDefault();
+        currentApp.handleEnter();
+      } else if (e.key === 'Backspace') {
+        e.preventDefault();
+        currentApp.handleBackspace();
+      }
+    });
+
+    // --- Calculator App Factory ---
+    function createCalculatorApp() {
+      var output = [];
+      var currentInput = '';
+      var state = 'start';
+      var data = {};
+      var stateMachine = {}; // This will be defined by each calculator
+      var currentCalcName = ''; // NEW: To track which calc is active
+      
+      function addOutput(text, color) {
+        output.push({ text: text, color: color || 'white' });
+        renderTerminal();
+      }
+      
+      function renderTerminal() {
+        var lines = '';
+        for (var i = 0; i < output.length; i++) {
+          lines += '<div class="line ' + output[i].color + '">' + output[i].text + '</div>';
+        }
+        
+        // Basic math calc doesn't show the input line
+        var inputLine = (state !== 'done' && state !== 'restart' && currentCalcName !== 'basicMath')
+          ? '<div class="input-line"><span>&gt; </span><span class="cursor">' + currentInput + '</span><span class="blink">▊</span></div>'
+          : '';
+          
+        terminal.innerHTML = lines + inputLine;
+        terminal.scrollTop = terminal.scrollHeight;
+      }
+      
+      function renderKeypad() {
+        if (state === 'restart') {
+            // Special "Enter to Restart" state
+            // Re-draw the *full* keypad, but add the restart prompt.
+            addOutput('\nPress ENTER to restart', 'yellow');
+            
+            // We still need the keypad visible for the next action,
+            // so we call the *actual* keypad render logic
+            // for the current calculator.
+            
+            // Re-set state to something neutral but not 'restart'
+            // to avoid an infinite loop. 'done' is a good signal.
+            state = 'done'; 
+        }
+
+        // We can't use the 'state' here anymore to check for restart
+        // because we just overrode it.
+        
+        var html = '';
+        if (currentCalcName === 'basicMath') {
+          // --- NEW MATH KEYPAD ---
+          html = '<div class="keypad-math-layout">' + // Use a new class for layout
+                 '<button onclick="if(navigator.vibrate)navigator.vibrate(10);currentApp.handleNumPad(\'7\')">7</button>' +
+                 '<button onclick="if(navigator.vibrate)navigator.vibrate(10);currentApp.handleNumPad(\'8\')">8</button>' +
+                 '<button onclick="if(navigator.vibrate)navigator.vibrate(10);currentApp.handleNumPad(\'9\')">9</button>' +
+                 '<button class="btn-op" onclick="if(navigator.vibrate)navigator.vibrate(10);currentApp.handleOp(\'/\')">/</button>' +
+                 
+                 '<button onclick="if(navigator.vibrate)navigator.vibrate(10);currentApp.handleNumPad(\'4\')">4</button>' +
+                 '<button onclick="if(navigator.vibrate)navigator.vibrate(10);currentApp.handleNumPad(\'5\')">5</button>' +
+                 '<button onclick="if(navigator.vibrate)navigator.vibrate(10);currentApp.handleNumPad(\'6\')">6</button>' +
+                 '<button class="btn-op" onclick="if(navigator.vibrate)navigator.vibrate(10);currentApp.handleOp(\'*\')">*</button>' +
+                 
+                 '<button onclick="if(navigator.vibrate)navigator.vibrate(10);currentApp.handleNumPad(\'1\')">1</button>' +
+                 '<button onclick="if(navigator.vibrate)navigator.vibrate(10);currentApp.handleNumPad(\'2\')">2</button>' +
+                 '<button onclick="if(navigator.vibrate)navigator.vibrate(10);currentApp.handleNumPad(\'3\')">3</button>' +
+                 '<button class="btn-op" onclick="if(navigator.vibrate)navigator.vibrate(10);currentApp.handleOp(\'-\')">-</button>' +
+                 
+                 '<button onclick="if(navigator.vibrate)navigator.vibrate(10);currentApp.handleNumPad(\'0\')">0</button>' +
+                 '<button onclick="if(navigator.vibrate)navigator.vibrate(10);currentApp.handleDecimal()">.</button>' +
+                 '<button class="btn-backspace" onclick="if(navigator.vibrate)navigator.vibrate(10);currentApp.handleBackspace()">←</button>' +
+                 '<button class="btn-op" onclick="if(navigator.vibrate)navigator.vibrate(10);currentApp.handleOp(\'+\')">+</button>' +
+
+                 '<button class="btn-clear" onclick="if(navigator.vibrate)navigator.vibrate(10);currentApp.handleClear()">C</button>' +
+                 '<button class="btn-enter-math" onclick="if(navigator.vibrate)navigator.vibrate(10);currentApp.handleEnter()">=</button>' +
+                 '</div>';
+        } else if (currentCalcName === 'priceadj') {
+          // --- NEW: Keypad for Price Adjuster ---
+          html = '<div class="keypad-grid" style="grid-template-rows: repeat(4, 1fr);">' +
+            '<button onclick="if(navigator.vibrate)navigator.vibrate(10);currentApp.handleNumPad(\'7\')">7</button>' +
+            '<button onclick="if(navigator.vibrate)navigator.vibrate(10);currentApp.handleNumPad(\'8\')">8</button>' +
+            '<button onclick="if(navigator.vibrate)navigator.vibrate(10);currentApp.handleNumPad(\'9\')">9</button>' +
+            '<button class="btn-backspace" onclick="if(navigator.vibrate)navigator.vibrate(10);currentApp.handleBackspace()">←</button>' +
+            
+            '<button onclick="if(navigator.vibrate)navigator.vibrate(10);currentApp.handleNumPad(\'4\')">4</button>' +
+            '<button onclick="if(navigator.vibrate)navigator.vibrate(10);currentApp.handleNumPad(\'5\')">5</button>' +
+            '<button onclick="if(navigator.vibrate)navigator.vibrate(10);currentApp.handleNumPad(\'6\')">6</button>' +
+            '<button style="color: #f87171;" onclick="if(navigator.vibrate)navigator.vibrate(10);currentApp.handleUndo()">UNDO</button>' + // New Undo Button
+            
+            '<button onclick="if(navigator.vibrate)navigator.vibrate(10);currentApp.handleNumPad(\'1\')">1</button>' +
+            '<button onclick="if(navigator.vibrate)navigator.vibrate(10);currentApp.handleNumPad(\'2\')">2</button>' +
+            '<button onclick="if(navigator.vibrate)navigator.vibrate(10);currentApp.handleNumPad(\'3\')">3</button>' +
+            '<button class="btn-enter" onclick="if(navigator.vibrate)navigator.vibrate(10);currentApp.handleEnter()" style="grid-row: 3 / 5;">ENTER</button>' + // Spanning Enter
+            
+            '<button onclick="if(navigator.vibrate)navigator.vibrate(10);currentApp.handleNumPad(\'0\')" style="grid-column: 1 / 3;">0</button>' + // Spanning 0
+            '<button onclick="if(navigator.vibrate)navigator.vibrate(10);currentApp.handleDecimal()">.</button>' +
+            '</div>';
+        } else {
+          // --- DEFAULT KEYPAD (NEW 4-COLUMN LAYOUT) ---
+          html = '<div class="keypad-grid">' + // 4 rows is implied by content
+            // Row 1
+            '<button onclick="if(navigator.vibrate)navigator.vibrate(10);currentApp.handleNumPad(\'7\')">7</button>' +
+            '<button onclick="if(navigator.vibrate)navigator.vibrate(10);currentApp.handleNumPad(\'8\')">8</button>' +
+            '<button onclick="if(navigator.vibrate)navigator.vibrate(10);currentApp.handleNumPad(\'9\')">9</button>' +
+            '<button class="btn-backspace" onclick="if(navigator.vibrate)navigator.vibrate(10);currentApp.handleBackspace()">←</button>' +
+            
+            // Row 2
+            '<button onclick="if(navigator.vibrate)navigator.vibrate(10);currentApp.handleNumPad(\'4\')">4</button>' +
+            '<button onclick="if(navigator.vibrate)navigator.vibrate(10);currentApp.handleNumPad(\'5\')">5</button>' +
+            '<button onclick="if(navigator.vibrate)navigator.vibrate(10);currentApp.handleNumPad(\'6\')">6</button>' +
+            '<button class="btn-enter" onclick="if(navigator.vibrate)navigator.vibrate(10);currentApp.handleEnter()" style="grid-row: 2 / 5;">ENTER</button>' + // Spanning 3 rows
+            
+            // Row 3
+            '<button onclick="if(navigator.vibrate)navigator.vibrate(10);currentApp.handleNumPad(\'1\')">1</button>' +
+            '<button onclick="if(navigator.vibrate)navigator.vibrate(10);currentApp.handleNumPad(\'2\')">2</button>' +
+            '<button onclick="if(navigator.vibrate)navigator.vibrate(10);currentApp.handleNumPad(\'3\')">3</button>' +
+            
+            // Row 4
+            '<button onclick="if(navigator.vibrate)navigator.vibrate(10);currentApp.handleNumPad(\'0\')" style="grid-column: 1 / 3;">0</button>' + // Spanning 2 cols
+            '<button onclick="if(navigator.vibrate)navigator.vibrate(10);currentApp.handleDecimal()">.</button>' +
+            '</div>';
+        }
+        keypad.innerHTML = html;
+      }
+      
+      // --- WRAPPER INPUT HANDLERS ---
+      // These functions check if the statemachine has its *own* version.
+      // If so, it runs it. If not, it runs the default (form) behavior.
+      
+      function handleNumPad(num) {
+        if (stateMachine.handleNumPad) {
+          if (currentCalcName === 'basicMath') {
+              stateMachine.handleNumPad(num); // This one handles its own display
+          } else {
+              // This is for 'control' and 'priceadj'
+              var _newInput = stateMachine.handleNumPad(num, state, currentInput);
+              currentInput = _newInput;
+              renderTerminal(); // render after
+          }
+        } else {
+          if (state === 'done') return; // Don't allow typing after 'done'
+          currentInput += num;
+          renderTerminal();
+        }
+      }
+      
+      function handleDecimal() {
+        if (stateMachine.handleDecimal) {
+            if (currentCalcName === 'basicMath') {
+                stateMachine.handleDecimal(); // This one handles its own display
+            } else {
+                stateMachine.handleDecimal(state, currentInput); // <-- Pass context for priceadj
+            }
+        } else {
+          if (state === 'done') return; // Don't allow typing after 'done'
+          if (currentInput.indexOf('.') === -1) {
+            currentInput += '.';
+            renderTerminal();
+          }
+        }
+      }
+      
+      function handleBackspace() {
+        if (stateMachine.handleBackspace) {
+          if (currentCalcName === 'basicMath') {
+              stateMachine.handleBackspace(); // This one handles its own display
+          } else {
+              // This is for 'control' and 'priceadj'
+              var _newInput = stateMachine.handleBackspace(state, currentInput);
+              currentInput = _newInput;
+              renderTerminal(); // render after
+          }
+        } else {
+          if (state === 'done') return; // Don't allow typing after 'done'
+          currentInput = currentInput.slice(0, -1);
+          renderTerminal();
+        }
+      }
+      
+      function handleEnter() {
+        var inputForState = currentInput; // Capture input before clearing
+        
+        // Run specific handler OR default handler
+        if (stateMachine.handleEnter) {
+          stateMachine.handleEnter(); // Math calc handles its own input
+        } else {
+          // Default behavior (for forms)
+          if (state !== 'restart' && state !== 'done') {
+             addOutput('> ' + inputForState, 'cyan');
+          }
+          var handler = stateMachine[state];
+          if (handler) {
+            handler(inputForState); // Execute the state logic
+          }
+        }
+        
+        // Clear input *after* handlers
+        // Don't clear input if we just finished and are waiting for restart
+        // BUT, for priceadj, we DO want to clear it to $ 0.00
+        if (state === 'done' && currentCalcName === 'priceadj') {
+             // Special case: reset priceadj input
+             if (stateMachine.handleBackspace) { // Check if it has custom handlers
+                 currentInput = stateMachine.handleBackspace('pa_add_price', '$ 0.00');
+                 currentInput = ''; // Let's just clear it.
+             }
+        } else if (state !== 'done') {
+            currentInput = '';
+        }
+        
+        // Re-render terminal and keypad *after* state logic has run
+        renderTerminal();
+        renderKeypad();
+      }
+      
+      // New handlers for Basic Math
+      function handleOp(op) {
+        if (stateMachine.handleOp) {
+          stateMachine.handleOp(op);
+        }
+      }
+      
+      function handleClear() {
+         if (stateMachine.handleClear) {
+          stateMachine.handleClear();
+        }
+      }
+      
+      // NEW: Handle Undo
+      function handleUndo() {
+        if (stateMachine.handleUndo) { 
+            var _newInput = stateMachine.handleUndo(state, currentInput);
+            currentInput = _newInput;
+        }
+        renderTerminal();
+      }
+      
+      function handleEscape() {
+        output = [];
+        currentInput = '';
+        terminal.innerHTML = '';
+        keypad.innerHTML = '';
+      }
+      
+      // Function for state machine to change state
+      function setState(newState, prompt, color) {
+        state = newState;
+        if (prompt) {
+          addOutput(prompt, color || 'white');
+        }
+      }
+      
+      // Function to get a state machine (for complex calcs)
+      function _getStateMachine() {
+        return stateMachine;
+      }
+      function _getData() {
+        return data;
+      }
+      function _getOutput() {
+        return output;
+      }
+
+      // Public API
+      var publicApi = {
+        handleNumPad: handleNumPad,
+        handleDecimal: handleDecimal,
+        handleBackspace: handleBackspace,
+        handleEnter: handleEnter,
+        handleOp: handleOp, 
+        handleClear: handleClear,
+        handleUndo: handleUndo, // <-- NEW
+        handleEscape: handleEscape,
+        getCalcName: function() { return currentCalcName; }, 
+        
+        // --- For setup ---
+        _init: function(calcName, initialState, initialData, sm, preserveOutput) {
+          currentCalcName = calcName; // <-- SET CALC NAME
+          state = initialState;
+          data = initialData || {};
+          stateMachine = sm; // Set the state machine
+          if (preserveOutput && output.length > 0) {
+            // Keep previous results on screen, separated by a divider
+            output.push({ text: '', color: 'white' });
+            output.push({ text: '\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550 NEW CALC \u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550', color: 'blue' });
+            if (output.length > 400) output = output.slice(output.length - 300);
+          } else {
+            output = [];
+          }
+          currentInput = '';
+          terminal.style.fontSize = globalFontSize + 'px'; // <-- USE GLOBAL FONT SIZE
+          
+          // The init function (first state)
+          var handler = stateMachine[state];
+          if (handler) {
+            handler(null); // Pass null for initial call
+          }
+          
+          // Special init for priceadj
+          if (currentCalcName === 'priceadj' && sm.handleNumPad) {
+              currentInput = sm.handleNumPad('', state, ''); // Get initial formatted string
+          }
+          
+          renderTerminal();
+          renderKeypad();
+        },
+        _addOutput: addOutput,
+        _setState: setState,
+        _getStateMachine: _getStateMachine,
+        _getData: _getData,
+        _getOutput: _getOutput
+      };
+      
+      return publicApi;
+    }
+    
+    // --- Calculator Definitions ---
+    var calculators = {
+      'ratio': { title: 'Cross Multiply Solver', fn: runRatioCalc },
+      'mtaper': { title: 'Med Taper Calculator', fn: runMTaperCalc },
+      'prednisone': { title: 'Prednisone Taper', fn: runPrednisoneCalc },
+      'control': { title: 'Control Substance Calculator', fn: runControlCalc },
+      'refill': { title: 'Refill Calculator', fn: runRefillCalc },
+      'priceadj': { title: 'Med Cost Adjuster', fn: runPriceAdjCalc },
+      'estradiol': { title: 'Estradiol Supply', fn: runEstradiolCalc },
+      'basicMath': { title: 'Basic Math', fn: runBasicMathCalc }, // <-- NEW
+      'lovenox': { title: 'Lovenox Calculator', fn: runLovenoxCalc }
+    };
+    
+    function initCalculator(calcName) {
+      if (currentApp) {
+        currentApp.handleEscape();
+      }
+      
+      var calcDef = calculators[calcName];
+      if (calcDef) {
+        calcTitle.textContent = calcDef.title;
+        currentApp = createCalculatorApp();
+        calcDef.fn(currentApp); // Run the calculator's setup function
+      }
+    }
+    
+    // --- 1. Ratio Calc ---
+    function runRatioCalc(app) {
+      var sm = {
+        'init': function() {
+          app._addOutput('Cross Multiply Solver', 'blue');
+          app._addOutput('Proportion: A / B = C / D', 'cyan');
+          app._addOutput('Press ENTER for unknown x', 'cyan');
+          app._addOutput('--------------------------', 'blue');
+          app._setState('ratio_a', 'A =', 'white');
+        },
+        'ratio_a': function(input) {
+          if (input === '') {
+            app._getData().a = null;
+            app._addOutput('> x (unknown)', 'cyan');
+          } else {
+            app._getData().a = parseFloat(input);
+          }
+          app._setState('ratio_c', 'C =', 'white');
+        },
+        'ratio_c': function(input) {
+          if (input === '') {
+            app._getData().c = null;
+            app._addOutput('> x (unknown)', 'cyan');
+          } else {
+            app._getData().c = parseFloat(input);
+          }
+          app._setState('ratio_b', 'B =', 'white');
+        },
+        'ratio_b': function(input) {
+          if (input === '') {
+            app._getData().b = null;
+            app._addOutput('> x (unknown)', 'cyan');
+          } else {
+            app._getData().b = parseFloat(input);
+          }
+          app._setState('ratio_d', 'D =', 'white');
+        },
+        'ratio_d': function(input) {
+          if (input === '') {
+            app._getData().d = null;
+            app._addOutput('> x (unknown)', 'cyan');
+          } else {
+            app._getData().d = parseFloat(input);
+          }
+          
+          var a = app._getData().a;
+          var b = app._getData().b;
+          var c = app._getData().c;
+          var d = app._getData().d;
+          
+          var nullCount = 0;
+          if (a === null) nullCount++;
+          if (b === null) nullCount++;
+          if (c === null) nullCount++;
+          if (d === null) nullCount++;
+          
+          if (nullCount === 1) {
+            var x;
+            if (a === null && d !== 0) {
+              x = (b * c) / d;
+              app._addOutput('Steps: x * ' + d + ' = ' + b + ' * ' + c, 'cyan');
+              app._addOutput('x = (' + b + ' * ' + c + ') / ' + d, 'cyan');
+            } else if (b === null && c !== 0) {
+              x = (a * d) / c;
+              app._addOutput('Steps: ' + a + ' * ' + d + ' = x * ' + c, 'cyan');
+              app._addOutput('x = (' + a + ' * ' + d + ') / ' + c, 'cyan');
+            } else if (c === null && b !== 0) {
+              x = (a * d) / b;
+              app._addOutput('Steps: ' + a + ' * ' + d + ' = ' + b + ' * x', 'cyan');
+              app._addOutput('x = (' + a + ' * ' + d + ') / ' + b, 'cyan');
+            } else if (d === null && a !== 0) {
+              x = (b * c) / a;
+              app._addOutput('Steps: ' + a + ' * x = ' + b + ' * ' + c, 'cyan');
+              app._addOutput('x = (' + b + ' * ' + c + ') / ' + a, 'cyan');
+            } else {
+              app._addOutput('Error: Division by zero', 'red');
+              app._setState('hard_restart'); // <-- Go to hard restart
+              return;
+            }
+            app._addOutput('ANSWER:', 'green');
+            app._addOutput('x = ' + x, 'green');
+            
+          } else if (nullCount === 0) {
+            if (b === 0 || d === 0) {
+              app._addOutput('Invalid proportion (division by zero).', 'red');
+            } else if ((a/b).toFixed(6) === (c/d).toFixed(6)) {
+              app._addOutput('Proportion is TRUE: ' + (a/b).toFixed(4) + ' = ' + (c/d).toFixed(4), 'green');
+            } else {
+              app._addOutput('Proportion is FALSE: ' + (a/b).toFixed(4) + ' != ' + (c/d).toFixed(4), 'yellow');
+            }
+          } else {
+            app._addOutput('Need exactly 1 unknown (blank)', 'red');
+          }
+          app._addOutput('--------------------------', 'blue');
+          app._setState('restart'); // <-- Go to 'Press ENTER to restart'
+        },
+        'done': function() {
+          // This state is just for waiting.
+          // Pressing Enter will trigger the 'restart' state.
+          sm.restart();
+        },
+        'restart': function() {
+          app._init('ratio', 'init', {}, sm, true);
+        },
+        'hard_restart': function() {
+            // This is for errors. It shows a big button.
+            keypad.innerHTML = '<div class="keypad-grid">' +
+                '<button class="btn-enter" style="grid-column: 1 / 5; background: #f87171;" onclick="if(navigator.vibrate)navigator.vibrate(10);currentApp.handleEnter()">ERROR: RESTART</button>' +
+                '</div>';
+            app._setState('restart'); // Next ENTER will trigger restart
+        }
+      };
+      app._init('ratio', 'init', {}, sm);
+    }
+    
+    // --- 2. Med Taper Calc ---
+    function runMTaperCalc(app) {
+      var sm = {
+        'init': function() {
+          app._addOutput('TAPER CALC', 'blue');
+          app._addOutput('', 'white');
+          app._addOutput('Mode:', 'white');
+          app._addOutput(' 1: Calculate quantity based on how many days taper will last', 'white');
+          app._addOutput(' 2: Calculate days based on quantity', 'white');
+          app._setState('mt_mode', 'Mode (1/2):', 'white');
+        },
+        'mt_mode': function(input) {
+          if (input === '1') {
+            app._getData().mtMode = 1;
+            app._addOutput('');
+            app._addOutput('MODE 1: Qty from Days', 'cyan');
+            app._setState('mt_target_days', 'Target days:', 'white');
+          } else if (input === '2') {
+            app._getData().mtMode = 2;
+            app._addOutput('');
+            app._addOutput('MODE 2: Days from Qty', 'cyan');
+            app._setState('mt_total_qty', 'Total Qty (caps):', 'white');
+          } else {
+            app._addOutput('Invalid mode', 'red');
+            app._setState('mt_mode', 'Mode (1/2):', 'white');
+          }
+        },
+        'mt_target_days': function(input) {
+          var tdays = parseInt(input);
+          if (isNaN(tdays) || tdays <= 0) {
+            app._addOutput('Need target', 'red');
+            app._setState('mt_target_days', 'Target days:', 'white');
+            return;
+          }
+          app._getData().mtTargetDays = tdays;
+          app._getData().mtLineNum = 1;
+          app._getData().mtLines = [];
+          app._addOutput('');
+          app._addOutput('TAPER SCHED:', 'cyan');
+          app._addOutput('');
+          app._addOutput('Line 1:', 'cyan');
+          app._setState('mt_caps_m1', '  Caps/day (ENTER=done):', 'white');
+        },
+        'mt_caps_m1': function(input) {
+          if (input === '') {
+            if (app._getData().mtLines.length === 0) {
+              app._addOutput('No taper!', 'red');
+              app._setState('restart');
+            } else {
+              calcMTaperMode1();
+            }
+            return;
+          }
+          var caps = parseFloat(input);
+          if (isNaN(caps)) {
+            app._addOutput('Invalid number.', 'red');
+            app._setState('mt_caps_m1', '  Caps/day (ENTER=done):', 'white');
+            return;
+          }
+          app._getData().currentCaps = caps;
+          app._setState('mt_days_m1', '  Days (or 0 for \'rest\'):', 'white');
+        },
+        'mt_days_m1': function(input) {
+          var days = parseFloat(input);
+          if (isNaN(days)) {
+             app._addOutput('Invalid number.', 'red');
+             app._setState('mt_days_m1', '  Days (or 0 for \'rest\'):', 'white');
+             return;
+          }
+          
+          if (days === 0) {
+              // This is the "rest" line
+              app._getData().mtLines.push([app._getData().currentCaps, null, true]);
+              calcMTaperMode1(); // Calculate immediately
+          } else if (days > 0) {
+              // This is a standard line
+              app._getData().mtLines.push([app._getData().currentCaps, days, false]);
+              app._getData().mtLineNum++;
+              if (app._getData().mtLineNum > 10) {
+                  calcMTaperMode1(); // Auto-calculate if max lines reached
+              } else {
+                  app._addOutput('');
+                  app._addOutput('Line ' + app._getData().mtLineNum + ':', 'cyan');
+                  app._setState('mt_caps_m1', '  Caps/day (ENTER=done):', 'white');
+              }
+          } else {
+              app._addOutput('Invalid number.', 'red');
+             app._setState('mt_days_m1', '  Days (or 0 for \'rest\'):', 'white');
+          }
+        },
+        'mt_total_qty': function(input) {
+          var qty = parseInt(input);
+          if (isNaN(qty) || qty <= 0) {
+            app._addOutput('Need qty', 'red');
+            app._setState('mt_total_qty', 'Total Qty (caps):', 'white');
+            return;
+          }
+          app._getData().mtTotalQty = qty;
+          app._getData().mtLineNum = 1;
+          app._getData().mtLines = [];
+          app._addOutput('');
+          app._addOutput('TAPER SCHED:', 'cyan');
+          app._addOutput('');
+          app._addOutput('Line 1:', 'cyan');
+          app._setState('mt_caps_m2', '  Caps/day (ENTER=done):', 'white');
+        },
+        'mt_caps_m2': function(input) {
+          if (input === '') {
+            if (app._getData().mtLines.length === 0) {
+              app._addOutput('No taper!', 'red');
+              app._setState('restart');
+            } else {
+              calcMTaperMode2();
+            }
+            return;
+          }
+          var caps = parseFloat(input);
+          if (isNaN(caps)) {
+            app._addOutput('Invalid number.', 'red');
+            app._setState('mt_caps_m2', '  Caps/day (ENTER=done):', 'white');
+            return;
+          }
+          app._getData().currentCaps = caps;
+          app._setState('mt_days_m2', '  Days (or 0 for \'rest\'):', 'white');
+        },
+        'mt_days_m2': function(input) {
+          var days = parseFloat(input);
+          if (isNaN(days)) {
+             app._addOutput('Invalid number.', 'red');
+             app._setState('mt_days_m2', '  Days (or 0 for \'rest\'):', 'white');
+             return;
+          }
+          
+          if (days === 0) {
+              // This is the "rest" line
+              app._getData().mtLines.push([app._getData().currentCaps, null, true]);
+              calcMTaperMode2(); // Calculate immediately
+          } else if (days > 0) {
+              // This is a standard line
+              app._getData().mtLines.push([app._getData().currentCaps, days, false]);
+              app._getData().mtLineNum++;
+              if (app._getData().mtLineNum > 10) {
+                  calcMTaperMode2(); // Auto-calculate if max lines reached
+              } else {
+                  app._addOutput('');
+                  app._addOutput('Line ' + app._getData().mtLineNum + ':', 'cyan');
+                  app._setState('mt_caps_m2', '  Caps/day (ENTER=done):', 'white');
+              }
+          } else {
+             app._addOutput('Invalid number.', 'red');
+             app._setState('mt_days_m2', '  Days (or 0 for \'rest\'):', 'white');
+          }
+        },
+        'done': function() {
+            sm.restart();
+        },
+        'restart': function() {
+          app._init('mtaper', 'init', { mtLines: [] }, sm, true);
+        }
+      };
+      
+      function calcMTaperMode1() {
+        var td = app._getData().mtTargetDays;
+        var tc = 0;
+        var du = 0;
+        var lines = app._getData().mtLines;
+        
+        app._addOutput('');
+        app._addOutput('---CALCULATION---', 'cyan');
+        
+        for (var i = 0; i < lines.length; i++) {
+          var c = lines[i][0];
+          var d = lines[i][1];
+          var id = lines[i][2];
+          if (id) {
+            var r = td - du;
+            if (r > 0) {
+              tc += c * r;
+              app._addOutput('Line ' + (i+1) + ': ' + c + ' caps x ' + r + ' days (rest) = ' + (c*r) + ' caps', 'white');
+              du += r;
+            } else {
+              app._addOutput('Line ' + (i+1) + ': ' + c + ' caps (for rest) - SKIPPED (days full)', 'yellow');
+            }
+            break;
+          } else {
+            if (du + d <= td) {
+              tc += c * d;
+              app._addOutput('Line ' + (i+1) + ': ' + c + ' caps x ' + d + ' days = ' + (c*d) + ' caps', 'white');
+              du += d;
+            } else {
+              var r = td - du;
+              if (r > 0) {
+                tc += c * r;
+                app._addOutput('Line ' + (i+1) + ': ' + c + ' caps x ' + r + ' days (cut short) = ' + (c*r) + ' caps', 'white');
+                du += r;
+              } else {
+                 app._addOutput('Line ' + (i+1) + ': ' + c + ' caps x ' + d + ' days - SKIPPED (days full)', 'yellow');
+              }
+              break;
+            }
+          }
+        }
+        app._addOutput('-----------------', 'cyan');
+        app._addOutput('Total Caps: ' + tc, 'white');
+        app._addOutput('Total Days: ' + du, 'white');
+        
+        app._addOutput('');
+        app._addOutput('---FINAL RESULT---', 'cyan');
+        app._addOutput('Targ: ' + td + ' days', 'white');
+        app._addOutput('Days: ' + du, 'white');
+        app._addOutput('');
+        app._addOutput('** DISP: ' + Math.floor(tc) + ' caps **', 'green');
+        if (du < td) {
+          app._addOutput('');
+          app._addOutput('Note: ' + (td - du) + ' days short', 'yellow');
+        }
+        app._addOutput('');
+        app._setState('restart');
+      }
+      
+      function calcMTaperMode2() {
+        var tq = app._getData().mtTotalQty;
+        var du = 0;
+        var cu = 0;
+        var lines = app._getData().mtLines;
+        
+        app._addOutput('');
+        app._addOutput('---CALCULATION---', 'cyan');
+        
+        for (var i = 0; i < lines.length; i++) {
+          var c = lines[i][0];
+          var d = lines[i][1];
+          var id = lines[i][2];
+          
+          if (c <= 0) {
+            if (!id && d) {
+                app._addOutput('Line ' + (i+1) + ': 0 caps x ' + d + ' days (placebo/off)', 'white');
+                du += d;
+            } else if (id) {
+                app._addOutput('Line ' + (i+1) + ': 0 caps (for rest) - SKIPPED (qty full)', 'yellow');
+            }
+            continue;
+          }
+          
+          var cr = tq - cu;
+          if (cr <= 0) {
+             app._addOutput('Line ' + (i+1) + ': ' + c + ' caps - SKIPPED (qty full)', 'yellow');
+             break;
+          }
+          
+          if (id) {
+            var dcc = cr / c;
+            app._addOutput('Line ' + (i+1) + ': ' + c + ' caps (for rest) = ' + dcc.toFixed(1) + ' days', 'white');
+            cu += c * dcc;
+            du += dcc;
+            break;
+          } else {
+            var scn = c * d;
+            if (scn <= cr) {
+              app._addOutput('Line ' + (i+1) + ': ' + c + ' caps x ' + d + ' days = ' + scn + ' caps', 'white');
+              cu += scn;
+              du += d;
+            } else {
+              var dcc = cr / c;
+              app._addOutput('Line ' + (i+1) + ': ' + c + ' caps x ' + dcc.toFixed(1) + ' days (cut short) = ' + (c*dcc) + ' caps', 'white');
+              cu += c * dcc;
+              du += dcc;
+              break;
+            }
+          }
+        }
+        app._addOutput('-----------------', 'cyan');
+        app._addOutput('Total Caps: ' + cu, 'white');
+        app._addOutput('Total Days: ' + du.toFixed(1), 'white');
+        
+        app._addOutput('');
+        app._addOutput('---FINAL RESULT---', 'cyan');
+        app._addOutput('Input Qty: ' + tq + ' caps', 'white');
+        app._addOutput('Caps Used: ' + Math.floor(cu), 'white');
+        app._addOutput('');
+        app._addOutput('** Day Supply: ' + du.toFixed(1) + ' days **', 'green');
+        if (cu < tq) {
+          app._addOutput('');
+          app._addOutput('Note: ' + (tq - cu).toFixed(1) + ' caps remain', 'yellow');
+        }
+        app._addOutput('');
+        app._setState('restart');
+      }
+      
+      app._init('mtaper', 'init', { mtLines: [] }, sm);
+    }
+    
+    // --- 3. Prednisone Taper ---
+    function runPrednisoneCalc(app) {
+      var sm = {
+        'init': function() {
+          app._addOutput('============================', 'blue');
+          app._addOutput('PREDNISONE TAPER', 'blue');
+          app._addOutput('============================', 'blue');
+          app._addOutput('');
+          app._setState('pred_qty', 'Quantity (or ENTER to skip):', 'white');
+        },
+        'pred_qty': function(input) {
+          app._getData().predQty = input === '' ? null : parseFloat(input);
+          app._addOutput('');
+          app._addOutput('DOSING:', 'cyan');
+          app._addOutput('');
+          app._addOutput('Line 1:', 'cyan');
+          app._setState('pred_tabs', '  Tabs/day (ENTER=done):', 'white');
+        },
+        'pred_tabs': function(input) {
+          if (input === '') {
+            if (app._getData().predLines.length === 0) {
+              app._addOutput('No doses!', 'red');
+              app._setState('restart');
+            } else {
+              var total = 0;
+              var days = 0;
+              var lines = app._getData().predLines;
+              for (var i = 0; i < lines.length; i++) {
+                total += lines[i][0] * lines[i][1];
+                days += lines[i][1];
+              }
+              app._addOutput('');
+              app._addOutput('============================', 'blue');
+              app._addOutput('BREAKDOWN', 'cyan');
+              app._addOutput('============================', 'blue');
+              app._addOutput('');
+              for (var i = 0; i < lines.length; i++) {
+                var t = lines[i][0];
+                var d = lines[i][1];
+                app._addOutput(t + ' x ' + d + ' = ' + (t*d), 'white');
+              }
+              app._addOutput('');
+              app._addOutput('============================', 'blue');
+              app._addOutput('FINAL RESULT', 'cyan');
+              app._addOutput('============================', 'blue');
+              app._addOutput('');
+              var qty = app._getData().predQty;
+              if (qty !== null) {
+                if (total === qty) {
+                  app._addOutput('** MATCH **', 'green');
+                } else {
+                  app._addOutput('** MISMATCH **', 'yellow');
+                }
+                app._addOutput('Rx: ' + qty + ' tabs', 'white');
+                app._addOutput('Need: ' + total + ' tabs', 'white');
+                if (total !== qty) {
+                  var diff = qty - total;
+                  if (diff > 0) {
+                    app._addOutput('Extra: +' + diff, 'cyan');
+                  } else {
+                    app._addOutput('Short: ' + diff, 'yellow');
+                  }
+                }
+              } else {
+                app._addOutput('** CALCULATED **', 'cyan');
+                app._addOutput('Rx: ' + total + ' tabs', 'white');
+                app._addOutput('Need: ' + total + ' tabs', 'white');
+              }
+              app._addOutput('Days: ' + days, 'white');
+              app._addOutput('');
+              app._setState('restart');
+            }
+            return;
+          }
+          var tabs = parseFloat(input);
+          if (isNaN(tabs)) {
+            app._addOutput('Invalid number', 'red');
+            app._addOutput('Line ' + app._getData().predLineNum + ':', 'cyan');
+            app._setState('pred_tabs', '  Tabs/day (ENTER=done):', 'white');
+            return;
+          }
+          app._getData().currentTabs = tabs;
+          app._setState('pred_days', '  Days:', 'white');
+        },
+        'pred_days': function(input) {
+          var days = parseFloat(input);
+          if (isNaN(days) || days <= 0) {
+            app._addOutput('Invalid number', 'red');
+            app._setState('pred_days', '  Days:', 'white');
+            return;
+          }
+          app._getData().predLines.push([app._getData().currentTabs, days]);
+          app._getData().predLineNum++;
+          if (app._getData().predLineNum > 10) {
+            app._addOutput('Max 10 lines reached', 'yellow');
+            app._addOutput('');
+            app._setState('pred_tabs');
+            app._getStateMachine()['pred_tabs'](''); // Force calculation
+          } else {
+            app._addOutput('');
+            app._addOutput('Line ' + app._getData().predLineNum + ':', 'cyan');
+            app._setState('pred_tabs', '  Tabs/day (ENTER=done):', 'white');
+          }
+        },
+        'done': function() {
+            sm.restart();
+        },
+        'restart': function() {
+          app._init('prednisone', 'init', { predLines: [], predLineNum: 1 }, sm, true);
+        }
+      };
+      app._init('prednisone', 'init', { predLines: [], predLineNum: 1 }, sm);
+    }
+    
+    // --- 4. Control Calc ---
+    function runControlCalc(app) {
+      function addDaysToDate(sy, sm, sd, daysToAdd) {
+        // Create a date object in local time
+        // Note: JS months are 0-11
+        var date = new Date(sy, sm - 1, sd);
+        
+        // Add the days
+        date.setDate(date.getDate() + daysToAdd);
+        
+        // Return the new date components in local time
+        return {y: date.getFullYear(), m: date.getMonth() + 1, d: date.getDate()};
+      }
+      
+      // Helper to format M/D/Y to MM/DD/YYYY (Dow)
+      function formatDate(m, d, y) {
+        var mm = m < 10 ? '0' + m : m;
+        var dd = d < 10 ? '0' + d : d;
+        var dow = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'][new Date(y, m - 1, d).getDay()];
+        return mm + '/' + dd + '/' + y + ' (' + dow + ')';
+      }
+      
+      // Helper to parse MM-DD-YY
+      function parseDate(input) {
+          if (input.length !== 8) return null; // MM-DD-YY
+          
+          var parts = input.split('-');
+          if (parts.length !== 3) return null;
+          
+          var sm_val = parseInt(parts[0]);
+          var sd = parseInt(parts[1]);
+          var sy = 2000 + parseInt(parts[2]);
+          
+          if (isNaN(sm_val) || isNaN(sd) || isNaN(sy)) return null;
+          // Basic validation, doesn't catch 02/30/24
+          if (sm_val < 1 || sm_val > 12 || sd < 1 || sd > 31 || sy < 2000) return null;
+          
+          // More robust check: see if JS Date object flips the month/day
+          var testDate = new Date(sy, sm_val - 1, sd);
+          if (testDate.getMonth() + 1 !== sm_val || testDate.getDate() !== sd) {
+              return null; // e.g., 02/30/24 becomes 03/01/24
+          }
+          
+          return { m: sm_val, d: sd, y: sy };
+      }
+      
+      // Helper to find days *between* two dates.
+      // 11/1 and 11/10 -> 9 days
+      function daysBetween(date1, date2) {
+          var oneDay = 1000 * 60 * 60 * 24;
+          // Set to noon to avoid DST issues
+          var d1 = new Date(date1.y, date1.m - 1, date1.d, 12, 0, 0);
+          var d2 = new Date(date2.y, date2.m - 1, date2.d, 12, 0, 0);
+          var timeDiff = d2.getTime() - d1.getTime();
+          return Math.round(timeDiff / oneDay);
+      }
+      
+      var sm = {
+        'init': function() {
+          app._addOutput('--- Main Menu ---', 'blue');
+          app._addOutput('1: Calculate next fill date based on previous month fill date', 'white');
+          app._addOutput('2: Calculate next fill date based on previous fills', 'white');
+          app._addOutput('3: Change in therapy of control substance', 'white');
+          app._setState('ctrl_menu', 'Select (1-3):', 'white');
+        },
+        'ctrl_menu': function(input) {
+          if (input === '1') {
+            app._addOutput('');
+            app._addOutput('--- Mode 1 ---', 'cyan');
+            app._setState('ctrl_simple_date', 'When was the previous fill date? (MM-DD-YY):', 'white');
+          } else if (input === '2') {
+            app._addOutput('');
+            app._addOutput('--- Mode 2 ---', 'cyan');
+            
+            // --- UPDATED MODE 2 ---
+            // No longer get "today". Ask for First Fill.
+            app._setState('ctrl_complex_first', 'First Fill (MM-DD-YY):', 'white');
+            
+          } else if (input === '3') {
+            app._addOutput('');
+            app._addOutput('--- Mode 3: Change in Therapy ---', 'cyan');
+            app._setState('ctrl_change_orig_date', 'Original Fill Date? (MM-DD-YY):', 'white');
+          } else {
+            app._addOutput('Error: Invalid choice.', 'red');
+            app._setState('ctrl_menu', 'Select (1-3):', 'white');
+          }
+        },
+        
+        // --- Mode 1 ---
+        'ctrl_simple_date': function(input) {
+          var dateObj = parseDate(input);
+          if (dateObj === null) {
+            app._addOutput('Invalid date format. Use MM-DD-YY', 'red');
+            app._setState('ctrl_simple_date', 'When was the previous fill date? (MM-DD-YY):', 'white');
+            return;
+          }
+          
+          app._getData().ctrlStartDate = dateObj;
+          app._addOutput('Previous Fill Date: ' + formatDate(dateObj.m, dateObj.d, dateObj.y), 'cyan');
+          app._setState('ctrl_simple_days', 'Day supply?:', 'white');
+        },
+        'ctrl_simple_days': function(input) {
+          var daysToAdd = parseInt(input);
+          if (isNaN(daysToAdd)) {
+            app._addOutput('Invalid number.', 'red');
+            app._setState('ctrl_simple_days', 'Day supply?:', 'white');
+            return;
+          }
+          
+          var d = app._getData().ctrlStartDate;
+          var result = addDaysToDate(d.y, d.m, d.d, daysToAdd);
+          var earlyResult = addDaysToDate(result.y, result.m, result.d, -3);
+          
+          app._addOutput('------------------------', 'blue');
+          app._addOutput('--- CALCULATION ---', 'cyan');
+          app._addOutput('Previous Fill: ' + formatDate(d.m, d.d, d.y), 'white');
+          app._addOutput('Day Supply: +' + daysToAdd + ' days', 'white');
+          app._addOutput('Next Fill Date = ' + formatDate(result.m, result.d, result.y), 'white');
+          app._addOutput('Early Fill Date = ' + formatDate(result.m, result.d, result.y) + ' - 3 days', 'white');
+          
+          app._addOutput('------------------------', 'blue');
+          app._addOutput('--- FINAL DATES ---', 'cyan');
+          app._addOutput('Next fill date is:', 'cyan');
+          app._addOutput(formatDate(result.m, result.d, result.y), 'green');
+          app._addOutput('');
+          app._addOutput('Can fill 3 days early on:', 'cyan');
+          app._addOutput(formatDate(earlyResult.m, earlyResult.d, earlyResult.y), 'yellow');
+          app._addOutput('');
+          app._setState('restart');
+        },
+        
+        // --- Mode 2 (REVISED) ---
+        'ctrl_complex_first': function(input) {
+          var dateObj = parseDate(input);
+          if (dateObj === null) {
+            app._addOutput('Invalid date format. Use MM-DD-YY', 'red');
+            app._setState('ctrl_complex_first', 'First Fill (MM-DD-YY):', 'white');
+            return;
+          }
+          
+          app._getData().ctrlStartDate = dateObj;
+          app._addOutput('First Fill: ' + formatDate(dateObj.m, dateObj.d, dateObj.y), 'cyan');
+          // Ask for LAST fill date
+          app._setState('ctrl_complex_last', 'Last Fill (MM-DD-YY):', 'white');
+        },
+        'ctrl_complex_last': function(input) {
+          var dateObj = parseDate(input);
+          if (dateObj === null) {
+            app._addOutput('Invalid date format. Use MM-DD-YY', 'red');
+            app._setState('ctrl_complex_last', 'Last Fill (MM-DD-YY):', 'white');
+            return;
+          }
+          
+          // Check that last fill is not before first fill
+          var firstFill = app._getData().ctrlStartDate;
+          if (daysBetween(firstFill, dateObj) < 0) {
+              app._addOutput('Error: Last fill date cannot be before first fill date.', 'red');
+              app._setState('ctrl_complex_last', 'Last Fill (MM-DD-YY):', 'white');
+              return;
+          }
+
+          app._getData().ctrlLastDate = dateObj;
+          app._addOutput('Last Fill: ' + formatDate(dateObj.m, dateObj.d, dateObj.y), 'cyan');
+          app._setState('ctrl_complex_supply', 'Days supply (e.g., 30):', 'white');
+        },
+        'ctrl_complex_supply': function(input) {
+          var supply = parseInt(input);
+          if (isNaN(supply) || supply <= 0) {
+            app._addOutput('Invalid supply.', 'red');
+            app._setState('ctrl_complex_supply', 'Days supply (e.g., 30):', 'white');
+            return;
+          }
+          
+          var firstFill = app._getData().ctrlStartDate;
+          var lastFill = app._getData().ctrlLastDate;
+
+          // 1. Calculate how many days have passed between first and last fill
+          var daysElapsed = daysBetween(firstFill, lastFill);
+
+          // 2. Calculate how many fills have happened.
+          // We use Math.round to be forgiving of early/late fills.
+          // (e.g., 58 days / 30 supply = 1.93 -> round to 2)
+          // Add 1 for the initial fill. (2 + 1 = 3 fills)
+          var fillsDone = Math.round(daysElapsed / supply) + 1;
+          
+          // 3. Calculate the total days for the *next* fill *from the beginning*
+          // (e.g., 3 fills * 30 days/fill = 90 days total)
+          var totalDaysForNextFill = fillsDone * supply;
+
+          // 4. Calculate the true next fill date by adding those total days
+          // to the *original first fill date*.
+          // (e.g., 08/20/25 + 90 days = 11/18/25)
+          var result = addDaysToDate(firstFill.y, firstFill.m, firstFill.d, totalDaysForNextFill);
+          
+          // 5. Calculate the early fill date from that true next fill date.
+          var earlyResult = addDaysToDate(result.y, result.m, result.d, -3);
+
+
+          app._addOutput('------------------------', 'blue');
+          app._addOutput('--- CALCULATION ---', 'cyan');
+          app._addOutput('Fills to date: ' + fillsDone, 'white');
+          app._addOutput('Day Supply: ' + supply + ' days', 'white');
+          app._addOutput('True Next Fill = ' + formatDate(firstFill.m, firstFill.d, firstFill.y) + ' + (' + fillsDone + ' * ' + supply + ' days)', 'white');
+          
+          app._addOutput('------------------------', 'blue');
+          app._addOutput('--- FINAL DATES ---', 'cyan');
+          app._addOutput('Next fill date is:', 'cyan');
+          app._addOutput(formatDate(result.m, result.d, result.y), 'green');
+          app._addOutput('');
+          app._addOutput('Can fill 3 days early on:', 'cyan');
+          app._addOutput(formatDate(earlyResult.m, earlyResult.d, earlyResult.y), 'yellow');
+          app._addOutput('');
+          app._setState('restart');
+        },
+        
+        // --- Mode 3 ---
+        'ctrl_change_orig_date': function(input) {
+            var dateObj = parseDate(input);
+            if (dateObj === null) {
+                app._addOutput('Invalid date. Use MM-DD-YY', 'red');
+                app._setState('ctrl_change_orig_date', 'Original Fill Date? (MM-DD-YY):', 'white');
+                return;
+            }
+            app._getData().origDate = dateObj;
+            app._addOutput('Original Fill: ' + formatDate(dateObj.m, dateObj.d, dateObj.y), 'cyan');
+            app._setState('ctrl_change_orig_qty', 'Original Quantity? (e.g., 60):', 'white');
+        },
+        'ctrl_change_orig_qty': function(input) {
+            var qty = parseFloat(input);
+            if (isNaN(qty) || qty <= 0) {
+                app._addOutput('Invalid quantity.', 'red');
+                app._setState('ctrl_change_orig_qty', 'Original Quantity? (e.g., 60):', 'white');
+                return;
+            }
+            app._getData().origQty = qty;
+            app._setState('ctrl_change_orig_dose', 'Original Dose? (per day):', 'white');
+        },
+        'ctrl_change_orig_dose': function(input) {
+            var dose = parseFloat(input);
+            if (isNaN(dose) || dose <= 0) {
+                app._addOutput('Invalid dose.', 'red');
+                app._setState('ctrl_change_orig_dose', 'Original Dose? (per day):', 'white');
+                return;
+            }
+            app._getData().origDose = dose;
+            app._setState('ctrl_change_new_date', 'Date of Dose Change? (MM-DD-YY):', 'white');
+        },
+        'ctrl_change_new_date': function(input) {
+            var dateObj = parseDate(input);
+            if (dateObj === null) {
+                app._addOutput('Invalid date. Use MM-DD-YY', 'red');
+                app._setState('ctrl_change_new_date', 'Date of Dose Change? (MM-DD-YY):', 'white');
+                return;
+            }
+            
+            if (daysBetween(app._getData().origDate, dateObj) < 0) {
+                app._addOutput('Change date cannot be before original fill date.', 'red');
+                app._setState('ctrl_change_new_date', 'Date of Dose Change? (MM-DD-YY):', 'white');
+                return;
+            }
+            
+            app._getData().newDate = dateObj;
+            app._addOutput('Dose Change: ' + formatDate(dateObj.m, dateObj.d, dateObj.y), 'cyan');
+            app._setState('ctrl_change_new_dose', 'NEW Dose? (per day):', 'white');
+        },
+        'ctrl_change_new_dose': function(input) {
+            var dose = parseFloat(input);
+            if (isNaN(dose) || dose <= 0) {
+                app._addOutput('Invalid dose.', 'red');
+                app._setState('ctrl_change_new_dose', 'NEW Dose? (per day):', 'white');
+                return;
+            }
+            app._getData().newDose = dose;
+            
+            // --- All data collected, now calculate ---
+            var data = app._getData();
+            var daysOnOldDose = daysBetween(data.origDate, data.newDate);
+            
+            if (daysOnOldDose < 0) { // Should be caught, but good to double check
+                app._addOutput('Error: Dates are out of order.', 'red');
+                app._setState('restart');
+                return;
+            }
+            
+            var capsUsed = daysOnOldDose * data.origDose;
+            var capsLeft = data.origQty - capsUsed;
+            
+            app._addOutput('------------------------', 'blue');
+            app._addOutput('--- CALCULATION ---', 'cyan');
+            app._addOutput('Days on old dose: ' + daysOnOldDose, 'white');
+            app._addOutput('Capsules used: ' + daysOnOldDose + ' days x ' + data.origDose + '/day = ' + capsUsed, 'white');
+            app._addOutput('Capsules left: ' + data.origQty + ' - ' + capsUsed + ' = ' + capsLeft, 'white');
+            
+            if (capsLeft < 0) {
+                app._addOutput('Error: More capsules used than were filled.', 'red');
+                app._addOutput('Supply ran out ' + Math.abs(capsLeft) + ' caps ago.', 'red');
+                app._setState('restart');
+                return;
+            }
+            
+            if (data.newDose === 0) {
+                 app._addOutput('Error: New dose cannot be 0.', 'red');
+                 app._setState('restart');
+                 return;
+            }
+            
+            var daysLeft = Math.floor(capsLeft / data.newDose);
+            var partialDay = (capsLeft % data.newDose) > 0;
+            
+            app._addOutput('Days of new supply: ' + capsLeft + ' caps / ' + data.newDose + '/day = ' + daysLeft + (partialDay ? ' (and partial)' : ''), 'white');
+            
+            // Supply starts *on* the change date.
+            // If daysLeft = 10, it lasts for 10 days (e.g., 10th-19th)
+            // The last day *with* meds is (change date + daysLeft - 1)
+            // The next fill date is (change date + daysLeft)
+            
+            var lastDayDate = addDaysToDate(data.newDate.y, data.newDate.m, data.newDate.d, daysLeft - 1);
+            var nextFillDate = addDaysToDate(data.newDate.y, data.newDate.m, data.newDate.d, daysLeft);
+            var earlyFillDate = addDaysToDate(nextFillDate.y, nextFillDate.m, nextFillDate.d, -3);
+            
+            app._addOutput('------------------------', 'blue');
+            app._addOutput('--- FINAL DATES ---', 'cyan');
+            app._addOutput('Supply lasts from ' + formatDate(data.newDate.m, data.newDate.d, data.newDate.y) + ' until ' + formatDate(lastDayDate.m, lastDayDate.d, lastDayDate.y), 'white');
+            app._addOutput('');
+            app._addOutput('Next theoretical fill:', 'cyan');
+            app._addOutput(formatDate(nextFillDate.m, nextFillDate.d, nextFillDate.y), 'green');
+            app._addOutput('');
+            app._addOutput('Earliest fill date (3 days early):', 'cyan');
+            app._addOutput(formatDate(earlyFillDate.m, earlyFillDate.d, earlyFillDate.y), 'yellow');
+            app._addOutput('');
+            app._setState('restart');
+        },
+
+        // --- Universal States ---
+        'done': function() {
+            sm.restart();
+        },
+        'restart': function() {
+          app._init('control', 'init', {}, sm, true);
+        },
+        
+        // --- Custom Keypad Handlers for Control Calc ---
+        'handleNumPad': function(num, currentState, currentVal) { // <-- New signature
+            // Check if we are in a date entry state
+            if (currentState === 'ctrl_simple_date' || 
+                currentState === 'ctrl_complex_first' ||
+                currentState === 'ctrl_complex_last' || // <-- ADDED
+                currentState === 'ctrl_change_orig_date' || 
+                currentState === 'ctrl_change_new_date') {
+                
+                var len = currentVal.length;
+                
+                // Limit to MM-DD-YY (8 chars)
+                if (len >= 8) {
+                    return currentVal; // Max length reached, return old value
+                }
+                
+                // Add dashes automatically
+                if (len === 2 || len === 5) {
+                    currentVal += '-';
+                }
+                currentVal += num;
+                return currentVal; // Return new value
+            } else {
+                // Default behavior for other states
+                if (currentState === 'done') return currentVal; // Don't allow typing
+                currentVal += num;
+                return currentVal;
+            }
+        },
+        'handleBackspace': function(currentState, currentVal) { // <-- New signature
+            if (currentState === 'done') return currentVal; // Don't allow typing
+            // Check if we are in a date entry state
+            if (currentState === 'ctrl_simple_date' || 
+                currentState === 'ctrl_complex_first' ||
+                currentState === 'ctrl_complex_last' || // <-- ADDED
+                currentState === 'ctrl_change_orig_date' || 
+                currentState === 'ctrl_change_new_date') {
+                
+                // If the last char is a dash, remove it and the preceding number
+                if (currentVal.endsWith('-')) {
+                    currentVal = currentVal.slice(0, -2); // Remove "N-"
+                } else {
+                    currentVal = currentVal.slice(0, -1); // Normal backspace
+                }
+                return currentVal; // Return new value
+            } else {
+                // Default behavior
+                currentVal = currentVal.slice(0, -1);
+                return currentVal;
+            }
+        }
+      };
+      app._init('control', 'init', {}, sm);
+    }
+    
+    // --- 5. Refill Calc ---
+    function runRefillCalc(app) {
+      var sm = {
+        'init': function() {
+          app._addOutput('--- Refill Calc ---', 'blue');
+          app._addOutput('');
+          app._setState('rf_prescribed', 'Prescribed Qty:', 'white');
+        },
+        'rf_prescribed': function(input) {
+          var prescribed = parseFloat(input);
+          if (isNaN(prescribed) || prescribed <= 0) {
+            app._addOutput('Invalid input.', 'red');
+            app._setState('rf_prescribed', 'Prescribed Qty:', 'white');
+            return;
+          }
+          app._getData().rfPrescribed = prescribed;
+          app._setState('rf_refills', 'Orig Refills:', 'white');
+        },
+        'rf_refills': function(input) {
+          var refills = parseInt(input);
+          if (isNaN(refills) || refills < 0) {
+            app._addOutput('Invalid input.', 'red');
+            app._setState('rf_refills', 'Orig Refills:', 'white');
+            return;
+          }
+          app._getData().rfRefills = refills;
+          app._setState('rf_dispensed', 'Dispensed Qty:', 'white');
+        },
+        'rf_dispensed': function(input) {
+          var dispensed = parseFloat(input);
+          if (isNaN(dispensed) || dispensed <= 0) {
+            app._addOutput('Error: Invalid dispensed qty', 'red');
+            app._setState('restart');
+            return;
+          }
+          var totalAuth = app._getData().rfPrescribed * (1 + app._getData().rfRefills);
+          var qtyRemain = totalAuth - dispensed;
+          app._addOutput('');
+          app._addOutput('--- Results ---', 'cyan');
+          app._addOutput('Total Auth: ' + totalAuth, 'white');
+          if (qtyRemain < 0) {
+            app._addOutput('');
+            app._addOutput('** WARNING **', 'yellow');
+            app._addOutput('Over dispensed by: ' + Math.abs(qtyRemain), 'red');
+          } else {
+            var newRefills = Math.floor(qtyRemain / dispensed);
+            var finalPartial = qtyRemain % dispensed;
+            app._addOutput('Qty Remain: ' + qtyRemain, 'white');
+            app._addOutput('New Refills: ' + newRefills, 'green');
+            app._addOutput('Final Partial: ' + finalPartial.toFixed(2).replace(/\.00$/, ''), 'cyan'); // Clean up .00
+          }
+          app._addOutput('-----------------', 'blue');
+          app._addOutput('');
+          app._setState('restart');
+        },
+        'done': function() {
+            sm.restart();
+        },
+        'restart': function() {
+          app._init('refill', 'init', {}, sm, true);
+        }
+      };
+      app._init('refill', 'init', {}, sm);
+    }
+    
+    // --- 6. Med Cost Adjuster ---
+    function runPriceAdjCalc(app) {
+      
+      // Helper function to format a string of cents (e.g., "1005")
+      // into a display string (e.g., "$ 10.05")
+      function formatCentsForDisplay(centsStr) {
+          if (centsStr === '') return '$ 0.00';
+          var padded = centsStr.padStart(3, '0'); // "1" -> "001", "10" -> "010", "100" -> "100"
+          var dollars = padded.slice(0, -2);
+          var cents = padded.slice(-2);
+          return '$ ' + dollars + '.' + cents;
+      }
+      
+      var sm = {
+        'init': function() {
+          app._getData().cents = ''; // Ensure cents is blank on init
+          app._addOutput('--- Med Cost Adjuster ---', 'blue');
+          app._setState('pa_add_price', 'Enter med price (0 to finish):', 'white');
+        },
+        'pa_add_price': function(input) { // input is formatted string, e.g., $ 1.00
+          var centsStr = app._getData().cents || '';
+          var price = parseFloat(centsStr.padStart(1, '0')) / 100; // "1"->0.01, "10"->0.10, "100"->1.00
+          
+          app._getData().cents = ''; // <-- RESET CENTS
+          
+          if (price === 0) {
+            if (app._getData().medPrices.length > 0) {
+              var current_total = app._getData().medPrices.reduce((a, b) => a + b, 0);
+              app._getData().currentTotal = current_total;
+              app._addOutput('--------------------', 'blue');
+              app._addOutput('Initial Total: $' + current_total.toFixed(2), 'cyan');
+              app._addOutput('--------------------', 'blue');
+              app._setState('pa_new_total', 'Enter NEW desired total (0 to quit):', 'white');
+            } else {
+              app._addOutput('Please enter at least one price.', 'red');
+              app._setState('pa_add_price', 'Enter med price (0 to finish):', 'white');
+            }
+          } else if (price < 0) { // Should not happen with cents logic
+            app._addOutput('Price cannot be negative.', 'red');
+            app._setState('pa_add_price', 'Enter med price (0 to finish):', 'white');
+          } else {
+            app._getData().medPrices.push(price);
+            app._addOutput('Added: $' + price.toFixed(2), 'cyan');
+            app._setState('pa_add_price', 'Enter med price (0 to finish):', 'white');
+          }
+        },
+        'pa_new_total': function(input) {
+            var centsStr = app._getData().cents || '';
+            var newTotal = parseFloat(centsStr.padStart(1, '0')) / 100;
+            
+            app._getData().cents = ''; // <-- RESET CENTS
+          
+            if (newTotal === 0) {
+                app._addOutput('Exiting. Final prices:', 'cyan');
+                app._getData().medPrices.forEach((price, i) => {
+                  app._addOutput('  ' + (i + 1) + '. $' + price.toFixed(2), 'white');
+                });
+                var finalTotal = app._getData().medPrices.reduce((a, b) => a + b, 0);
+                app._addOutput('Final Total: $' + finalTotal.toFixed(2), 'green');
+                app._setState('restart');
+                return;
+            }
+          
+            app._getData().newTotal = newTotal;
+            app._addOutput('Select medication to adjust:', 'cyan');
+            app._getData().medPrices.forEach((price, i) => {
+              app._addOutput('  ' + (i + 1) + '. $' + price.toFixed(2), 'white');
+            });
+            app._setState('pa_select_med', 'Enter number (1-' + app._getData().medPrices.length + '):', 'white');
+        },
+        'pa_select_med': function(input) {
+          var choice = parseInt(input);
+          var len = app._getData().medPrices.length;
+          if (isNaN(choice) || choice < 1 || choice > len) {
+            app._addOutput('Choice must be between 1 and ' + len + '.', 'red');
+            app._setState('pa_select_med', 'Enter number (1-' + len + '):', 'white');
+            return;
+          }
+          
+          var selectedIndex = choice - 1;
+          var selectedPrice = app._getData().medPrices[selectedIndex];
+          var currentTotal = app._getData().medPrices.reduce((a, b) => a + b, 0);
+          var difference = app._getData().newTotal - currentTotal;
+          var newSelectedPrice = selectedPrice + difference;
+          
+          if (newSelectedPrice < 0) {
+              app._addOutput('Error: Adjustment would make med ' + choice + ' negative ($' + newSelectedPrice.toFixed(2) + ')', 'red');
+              app._addOutput('Current total is $' + currentTotal.toFixed(2), 'yellow');
+          } else {
+              app._getData().medPrices[selectedIndex] = newSelectedPrice;
+              app._addOutput('--------------------', 'blue');
+              app._addOutput('Adjusted Med ' + choice + ' to: $' + newSelectedPrice.toFixed(2), 'cyan');
+              var newCalculatedTotal = app._getData().medPrices.reduce((a, b) => a + b, 0);
+              app._addOutput('New Grand Total: $' + newCalculatedTotal.toFixed(2), 'green');
+          }
+          
+          app._addOutput('--------------------', 'blue');
+          // Loop back to ask for another new total
+          app._getData().cents = ''; // Reset cents for next total
+          app._setState('pa_new_total', 'Enter NEW desired total (0 to quit):', 'white');
+        },
+        'done': function() {
+            sm.restart();
+        },
+        'restart': function() {
+          app._init('priceadj', 'init', { medPrices: [], cents: '' }, sm, true);
+        },
+        
+        // --- Custom Keypad Handlers for Price Adjuster ---
+        'handleNumPad': function(num, currentState, currentVal) {
+            if (currentState === 'pa_add_price' || currentState === 'pa_new_total') {
+                var cents = app._getData().cents || '';
+                if (cents.length >= 8) return currentVal; // Limit length
+                cents += num;
+                app._getData().cents = cents; // Store raw cents
+                return formatCentsForDisplay(cents); // Return formatted string
+            }
+            // Default behavior for other states (like 'pa_select_med')
+            if (currentState === 'done') return currentVal;
+            currentVal += num;
+            return currentVal;
+        },
+        'handleBackspace': function(currentState, currentVal) {
+            if (currentState === 'pa_add_price' || currentState === 'pa_new_total') {
+                var cents = app._getData().cents || '';
+                if (cents.length > 0) {
+                    cents = cents.slice(0, -1);
+                }
+                app._getData().cents = cents;
+                return formatCentsForDisplay(cents);
+            }
+            // Default behavior
+            if (currentState === 'done') return currentVal;
+            currentVal = currentVal.slice(0, -1);
+            return currentVal;
+        },
+        'handleDecimal': function(currentState, currentVal) {
+             if (currentState === 'pa_add_price' || currentState === 'pa_new_total') {
+                // Do nothing, decimal is automatic
+             } else {
+                // Default behavior
+                if (currentState === 'done') return;
+                if (currentVal.indexOf('.') === -1) {
+                    currentInput += '.'; // Use global
+                    renderTerminal();
+                }
+             }
+        },
+        // NEW: Handle Undo
+        'handleUndo': function(currentState, currentVal) {
+            if (currentState === 'pa_add_price') {
+                var prices = app._getData().medPrices;
+                if (prices.length > 0) {
+                    var p = prices.pop();
+                    app._addOutput('Removed: $' + p.toFixed(2), 'yellow');
+                }
+                app._getData().cents = '';
+                return formatCentsForDisplay('');
+            }
+            return currentVal; // Do nothing in other states
+        }
+      };
+      app._init('priceadj', 'init', { medPrices: [], cents: '' }, sm);
+    }
+
+    // --- 7. Estradiol Supply Calc (FIXED) ---
+    function runEstradiolCalc(app) {
+
+      // EDIT HERE: add your common tube sizes (grams) to this list
+      var TUBE_PRESETS = [42.5];
+
+      // Parse a number. Returns the value, or NaN if invalid / out of range.
+      function toNum(input, allowZero) {
+        var v = parseFloat(input);
+        if (isNaN(v) || !isFinite(v)) return NaN;
+        if (allowZero ? v >= 0 : v > 0) return v;
+        return NaN;
+      }
+      function toInt(input, allowZero) {
+        if (String(input).indexOf('.') !== -1) return NaN;
+        var v = parseInt(input, 10);
+        if (isNaN(v)) return NaN;
+        if (allowZero ? v >= 0 : v > 0) return v;
+        return NaN;
+      }
+
+      // Show an error and re-ask the SAME state.
+      // (The old version jumped to a separate "reprompt" state, which
+      //  silently swallowed the user's next entry.)
+      function reAsk(stateName, promptText, msg) {
+        app._addOutput(msg || 'Invalid number. Enter a positive number.', 'red');
+        app._setState(stateName, promptText, 'white');
+      }
+
+      function weeklyPrompt() {
+        return 'Grams for Week ' + app._getData().week_num + ' (0=stop, ENTER=constant):';
+      }
+
+      function showModeMenu() {
+        app._addOutput('\nSelect Dosing Type:', 'cyan');
+        app._addOutput('1: Daily Dosing Only', 'white');
+        app._addOutput('2: Weekly Dosing Only', 'white');
+        app._addOutput('3: Daily, then Weekly', 'white');
+        app._addOutput('4: Weekly, then Daily', 'white');
+        app._setState('select_mode', 'Enter 1, 2, 3, or 4:', 'white');
+      }
+
+      // One step of the weekly consumption loop (used by Mode 2, and by
+      // Mode 3's maintenance phase). Tracks days of supply in data.days_weekly.
+      function weeklyStep(g_per_w) {
+        var d = app._getData();
+        if (g_per_w > d.g_rem) {
+          // Tube empties partway through this week
+          d.days_weekly += (d.g_rem / g_per_w) * 7;
+          d.g_rem = 0;
+          app._addOutput('Empties during Week ' + d.week_num + '.', 'yellow');
+          finishWeekly(false);
+        } else {
+          d.g_rem -= g_per_w;
+          d.days_weekly += 7;
+          app._addOutput('After Week ' + d.week_num + ': ' + d.g_rem.toFixed(2) + 'g left.', 'white');
+          d.week_num++;
+          app._setState('weekly_next_g', weeklyPrompt(), 'white');
+        }
+      }
+
+      function finishWeekly(stopped) {
+        var d = app._getData();
+        var maintDays = d.days_weekly;
+        app._addOutput('----------------------------', 'blue');
+        if (d.mode === '2') {
+          if (stopped) {
+            app._addOutput('Dosing stopped after ' + maintDays.toFixed(1) + ' days.', 'white');
+            app._addOutput(d.g_rem.toFixed(2) + 'g remain unused.', 'white');
+            app._addOutput('Day Supply (days dosed): ' + maintDays.toFixed(1), 'green');
+          } else {
+            app._addOutput('Total Day Supply: ' + maintDays.toFixed(1), 'green');
+          }
+        } else {
+          // Mode 3: add the loading-phase days on top
+          if (stopped) {
+            app._addOutput('Days of maintenance supply: ' + maintDays.toFixed(1) + ' (dose stopped, ' + d.g_rem.toFixed(2) + 'g unused)', 'white');
+          } else {
+            app._addOutput('Days of maintenance supply: ' + maintDays.toFixed(1), 'white');
+          }
+          var total = d.load_days + maintDays;
+          app._addOutput('Total Day Supply (' + d.load_days + ' + ' + maintDays.toFixed(1) + '):\n' + total.toFixed(1), 'green');
+        }
+        app._addOutput('----------------------------', 'blue');
+        app._setState('restart');
+      }
+
+      // One step of Mode 4's weekly phase (fixed number of phase days).
+      function mode4WeeklyStep(g_per_w) {
+        var d = app._getData();
+        var daily = g_per_w / 7.0;
+        var days_left = d.weekly_days - d.days_done;
+        var apply = Math.min(7, days_left);
+        d.g_used += daily * apply;
+        d.days_done += apply;
+        if (d.days_done >= d.weekly_days) {
+          app._setState('mode4_get_daily_maint', 'Daily Maintenance (g/day):', 'white');
+        } else {
+          d.week_num++;
+          app._setState('mode4_next_g', 'Grams for Week ' + d.week_num + ' (0=stop, ENTER=constant):', 'white');
+        }
+      }
+
+      var sm = {
+        'init': function() {
+          app._addOutput('----------------------------', 'blue');
+          app._addOutput('Estradiol Supply Calculator', 'cyan');
+          app._addOutput('Flexible Dosing Model', 'cyan');
+          app._addOutput('----------------------------', 'blue');
+          if (TUBE_PRESETS.length > 0) {
+            app._addOutput('Tube size:', 'cyan');
+            for (var i = 0; i < TUBE_PRESETS.length; i++) {
+              app._addOutput(' ' + (i + 1) + ': ' + TUBE_PRESETS[i] + 'g', 'white');
+            }
+            app._addOutput(' ' + (TUBE_PRESETS.length + 1) + ': Enter manually', 'white');
+            app._setState('select_tube', 'Select (1-' + (TUBE_PRESETS.length + 1) + '):', 'white');
+          } else {
+            app._setState('get_total_g', 'Total grams in tube (e.g. 42.5):', 'white');
+          }
+        },
+
+        'select_tube': function(input) {
+          var n = TUBE_PRESETS.length;
+          var v = parseInt(input, 10);
+          if (isNaN(v) || v < 1 || v > n + 1 || String(input).indexOf('.') !== -1) {
+            reAsk('select_tube', 'Select (1-' + (n + 1) + '):', 'Invalid choice.');
+            return;
+          }
+          if (v <= n) {
+            app._getData().total_g = TUBE_PRESETS[v - 1];
+            app._addOutput('Tube: ' + TUBE_PRESETS[v - 1] + 'g', 'cyan');
+            showModeMenu();
+          } else {
+            app._setState('get_total_g', 'Total grams in tube (e.g. 42.5):', 'white');
+          }
+        },
+
+        'get_total_g': function(input) {
+          var v = toNum(input, false);
+          if (isNaN(v)) {
+            reAsk('get_total_g', 'Total grams in tube (e.g. 42.5):');
+            return;
+          }
+          app._getData().total_g = v;
+          showModeMenu();
+        },
+
+        'select_mode': function(input) {
+          var d = app._getData();
+          if (['1', '2', '3', '4'].indexOf(input) === -1) {
+            reAsk('select_mode', 'Enter 1, 2, 3, or 4:', 'Invalid choice.');
+            return;
+          }
+          app._addOutput('----------------------------', 'blue');
+          if (input === '1') {
+            app._addOutput('Mode: Daily Dosing Only', 'cyan');
+            app._setState('mode1_get_g', 'Grams used per DAY:', 'white');
+          } else if (input === '2') {
+            app._addOutput('Mode: Weekly Dosing Only', 'cyan');
+            d.mode = '2';
+            d.g_rem = d.total_g;
+            d.days_weekly = 0;
+            d.week_num = 1;
+            app._setState('weekly_first_g', 'Grams for Week 1:', 'white');
+          } else if (input === '3') {
+            app._addOutput('Mode: Daily, then Weekly', 'cyan');
+            app._setState('mode3_get_load_days', 'Duration of loading phase (days):', 'white');
+          } else {
+            app._addOutput('Mode: Weekly, then Daily', 'cyan');
+            app._setState('mode4_get_weekly_days', 'Duration of weekly phase (days):', 'white');
+          }
+        },
+
+        // --- Mode 1: Daily only ---
+        'mode1_get_g': function(input) {
+          var v = toNum(input, true); // allow 0
+          if (isNaN(v)) {
+            reAsk('mode1_get_g', 'Grams used per DAY:');
+            return;
+          }
+          app._addOutput('----------------------------', 'blue');
+          if (v > 0) {
+            app._addOutput('Total Day Supply: ' + (app._getData().total_g / v).toFixed(1), 'green');
+          } else {
+            app._addOutput('Total Day Supply: N/A (dose is 0)', 'green');
+          }
+          app._addOutput('----------------------------', 'blue');
+          app._setState('restart');
+        },
+
+        // --- Weekly loop (Mode 2, and Mode 3 maintenance) ---
+        'weekly_first_g': function(input) {
+          var v = toNum(input, false); // week 1 must be > 0
+          if (isNaN(v)) {
+            reAsk('weekly_first_g', 'Grams for Week 1:',
+              input === '' ? 'Week 1 needs a number. (ENTER=constant works from Week 2 on.)' : null);
+            return;
+          }
+          app._getData().g_per_w_first = v;
+          weeklyStep(v);
+        },
+        'weekly_next_g': function(input) {
+          var d = app._getData();
+          if (input === '') {
+            // ENTER = keep dosing at Week 1's dose until the tube is empty
+            var c = d.g_per_w_first;
+            app._addOutput('Calculating constant ' + c + 'g/week.', 'cyan');
+            d.days_weekly += (d.g_rem / c) * 7;
+            d.g_rem = 0;
+            finishWeekly(false);
+            return;
+          }
+          var v = toNum(input, true); // allow 0 (= stop)
+          if (isNaN(v)) {
+            reAsk('weekly_next_g', weeklyPrompt());
+            return;
+          }
+          if (v === 0) {
+            app._addOutput('Dose 0. Stopping.', 'yellow');
+            finishWeekly(true);
+            return;
+          }
+          weeklyStep(v);
+        },
+
+        // --- Mode 3: Daily loading, then weekly maintenance ---
+        'mode3_get_load_days': function(input) {
+          var v = toInt(input, true); // allow 0
+          if (isNaN(v)) {
+            reAsk('mode3_get_load_days', 'Duration of loading phase (days):', 'Invalid number. Enter whole days (0 or more).');
+            return;
+          }
+          app._getData().load_days = v;
+          app._setState('mode3_get_load_g', 'Loading Dose (g/day):', 'white');
+        },
+        'mode3_get_load_g': function(input) {
+          var d = app._getData();
+          var v = toNum(input, true); // allow 0
+          if (isNaN(v)) {
+            reAsk('mode3_get_load_g', 'Loading Dose (g/day):');
+            return;
+          }
+          d.load_g = v;
+          app._addOutput('----------------------------', 'blue');
+          var g_used_load = v * d.load_days;
+          app._addOutput('Grams used in ' + d.load_days + '-day loading: ' + g_used_load.toFixed(2), 'white');
+
+          if (g_used_load >= d.total_g) {
+            app._addOutput('Tube runs out during loading phase.', 'yellow');
+            var days_supply = v > 0 ? d.total_g / v : 0;
+            app._addOutput('----------------------------', 'blue');
+            app._addOutput('Total Day Supply: ' + days_supply.toFixed(1), 'green');
+            app._addOutput('----------------------------', 'blue');
+            app._setState('restart');
+          } else {
+            var g_rem = d.total_g - g_used_load;
+            app._addOutput('Grams remaining for maint: ' + g_rem.toFixed(2), 'white');
+            app._addOutput('--- Maintenance Phase ---', 'cyan');
+            d.mode = '3';
+            d.g_rem = g_rem;
+            d.days_weekly = 0;
+            d.week_num = 1;
+            app._setState('weekly_first_g', 'Grams for Week 1:', 'white');
+          }
+        },
+
+        // --- Mode 4: Weekly phase (fixed days), then daily maintenance ---
+        'mode4_get_weekly_days': function(input) {
+          var d = app._getData();
+          var v = toInt(input, true); // allow 0
+          if (isNaN(v)) {
+            reAsk('mode4_get_weekly_days', 'Duration of weekly phase (days):', 'Invalid number. Enter whole days (0 or more).');
+            return;
+          }
+          d.weekly_days = v;
+          d.g_used = 0;
+          d.days_done = 0;
+          d.week_num = 1;
+          if (v === 0) {
+            app._setState('mode4_get_daily_maint', 'Daily Maintenance (g/day):', 'white');
+          } else {
+            app._setState('mode4_first_g', 'Grams for Week 1:', 'white');
+          }
+        },
+        'mode4_first_g': function(input) {
+          var v = toNum(input, true); // allow 0
+          if (isNaN(v)) {
+            reAsk('mode4_first_g', 'Grams for Week 1:',
+              input === '' ? 'Week 1 needs a number. (ENTER=constant works from Week 2 on.)' : null);
+            return;
+          }
+          app._getData().g_per_w_first = v;
+          mode4WeeklyStep(v);
+        },
+        'mode4_next_g': function(input) {
+          var d = app._getData();
+          if (input === '') {
+            // ENTER = keep Week 1's dose for the rest of the phase
+            var c = d.g_per_w_first;
+            app._addOutput('Calculating constant ' + c + 'g/week for remaining days.', 'cyan');
+            var days_left = d.weekly_days - d.days_done;
+            if (days_left > 0 && c > 0) {
+              d.g_used += (c / 7.0) * days_left;
+            }
+            d.days_done = d.weekly_days;
+            app._setState('mode4_get_daily_maint', 'Daily Maintenance (g/day):', 'white');
+            return;
+          }
+          var v = toNum(input, true); // allow 0 (= stop)
+          if (isNaN(v)) {
+            reAsk('mode4_next_g', 'Grams for Week ' + d.week_num + ' (0=stop, ENTER=constant):');
+            return;
+          }
+          if (v === 0) {
+            app._addOutput('Dose 0. Stopping phase calc.', 'yellow');
+            app._setState('mode4_get_daily_maint', 'Daily Maintenance (g/day):', 'white');
+            return;
+          }
+          mode4WeeklyStep(v);
+        },
+        'mode4_get_daily_maint': function(input) {
+          var d = app._getData();
+          var v = toNum(input, true); // allow 0
+          if (isNaN(v)) {
+            reAsk('mode4_get_daily_maint', 'Daily Maintenance (g/day):');
+            return;
+          }
+          d.g_day_maint = v;
+
+          app._addOutput('----------------------------', 'blue');
+          app._addOutput('Grams used in ' + d.weekly_days + '-day weekly phase: ' + d.g_used.toFixed(2), 'white');
+
+          if (d.g_used >= d.total_g) {
+            app._addOutput('Tube runs out during the weekly phase.', 'yellow');
+            app._addOutput('----------------------------', 'blue');
+            app._addOutput('Total Day Supply: < ' + d.weekly_days + ' days', 'green');
+            app._addOutput('----------------------------', 'blue');
+            app._setState('restart');
+            return;
+          }
+
+          var g_rem = d.total_g - d.g_used;
+          app._addOutput('Grams remaining for maint: ' + g_rem.toFixed(2), 'white');
+          app._addOutput('Grams used per day (maint): ' + v, 'white');
+
+          if (v > 0) {
+            var days_maint = g_rem / v;
+            app._addOutput('Days of daily maintenance: ' + days_maint.toFixed(1), 'white');
+            var total_days = d.weekly_days + days_maint;
+            app._addOutput('----------------------------', 'blue');
+            app._addOutput('Total Day Supply (' + d.weekly_days + ' + ' + days_maint.toFixed(1) + '):\n' + total_days.toFixed(1), 'green');
+          } else {
+            app._addOutput('Days of daily maintenance: N/A (dose is 0)', 'white');
+            app._addOutput('----------------------------', 'blue');
+            app._addOutput('Total Day Supply: N/A (dose stopped, ' + g_rem.toFixed(2) + 'g unused)', 'green');
+          }
+          app._addOutput('----------------------------', 'blue');
+          app._setState('restart');
+        },
+
+        // --- Universal Restart ---
+        'done': function() {
+          sm.restart();
+        },
+        'restart': function() {
+          app._init('estradiol', 'init', {}, sm, true);
+        }
+      };
+
+      app._init('estradiol', 'init', {}, sm);
+    }
+    
+    // --- 9. Lovenox Calculator ---
+    function runLovenoxCalc(app) {
+
+      // EDIT HERE: standard Lovenox (enoxaparin) prefilled syringes [mg, mL]
+      var LOVENOX_PRESETS = [
+        [30, 0.3],
+        [40, 0.4],
+        [60, 0.6],
+        [80, 0.8],
+        [100, 1],
+        [120, 0.8],
+        [150, 1]
+      ];
+      var MANUAL_OPT = LOVENOX_PRESETS.length + 1;
+
+      function toNum(input, allowZero) {
+        var v = parseFloat(input);
+        if (isNaN(v) || !isFinite(v)) return NaN;
+        if (allowZero ? v >= 0 : v > 0) return v;
+        return NaN;
+      }
+      function toInt(input, allowZero) {
+        if (String(input).indexOf('.') !== -1) return NaN;
+        var v = parseInt(input, 10);
+        if (isNaN(v)) return NaN;
+        if (allowZero ? v >= 0 : v > 0) return v;
+        return NaN;
+      }
+      function reAsk(stateName, promptText, msg) {
+        app._addOutput(msg || 'Invalid number. Enter a positive number.', 'red');
+        app._setState(stateName, promptText, 'white');
+      }
+      function fmt(n) {
+        // Trim floating point noise: 8.000000000001 -> "8"
+        return parseFloat(n.toFixed(4)).toString();
+      }
+
+      function showStrengthMenu() {
+        app._addOutput('\nSyringe strength:', 'cyan');
+        for (var i = 0; i < LOVENOX_PRESETS.length; i++) {
+          app._addOutput(' ' + (i + 1) + ': ' + LOVENOX_PRESETS[i][0] + 'mg/' + LOVENOX_PRESETS[i][1] + 'mL', 'white');
+        }
+        app._addOutput(' ' + MANUAL_OPT + ': Enter mL manually', 'white');
+      }
+
+      // Reads a strength-menu selection.
+      // Returns 'manual', a [mg, mL] preset, or null (invalid; already re-asked).
+      function readStrength(input, stateName) {
+        var v = toInt(input, false);
+        if (isNaN(v) || v < 1 || v > MANUAL_OPT) {
+          reAsk(stateName, 'Select (1-' + MANUAL_OPT + '):', 'Invalid choice.');
+          return null;
+        }
+        if (v === MANUAL_OPT) return 'manual';
+        var p = LOVENOX_PRESETS[v - 1];
+        app._addOutput('Syringe: ' + p[0] + 'mg/' + p[1] + 'mL', 'cyan');
+        return p;
+      }
+
+      var sm = {
+        'init': function() {
+          app._addOutput('----------------------------', 'blue');
+          app._addOutput('Lovenox (Enoxaparin) Calc', 'cyan');
+          app._addOutput('----------------------------', 'blue');
+          app._addOutput('1: Syringe qty from directions', 'white');
+          app._addOutput('2: Syringes from total mL', 'white');
+          app._setState('lx_menu', 'Select (1-2):', 'white');
+        },
+        'lx_menu': function(input) {
+          if (input === '1') {
+            app._addOutput('--- Qty From Directions ---', 'cyan');
+            showStrengthMenu();
+            app._setState('lx1_strength', 'Select (1-' + MANUAL_OPT + '):', 'white');
+          } else if (input === '2') {
+            app._addOutput('--- Syringes From Total mL ---', 'cyan');
+            app._setState('lx2_total', 'Total mL to dispense:', 'white');
+          } else {
+            reAsk('lx_menu', 'Select (1-2):', 'Invalid choice.');
+          }
+        },
+
+        // --- Mode 1: quantity from directions ---
+        'lx1_strength': function(input) {
+          var r = readStrength(input, 'lx1_strength');
+          if (r === null) return;
+          var d = app._getData();
+          if (r === 'manual') {
+            d.mg = null;
+            app._setState('lx1_manual_ml', 'mL per injection:', 'white');
+          } else {
+            d.mg = r[0];
+            d.ml = r[1];
+            app._setState('lx1_freq', 'Injections per DAY:', 'white');
+          }
+        },
+        'lx1_manual_ml': function(input) {
+          var v = toNum(input, false);
+          if (isNaN(v)) { reAsk('lx1_manual_ml', 'mL per injection:'); return; }
+          app._getData().ml = v;
+          app._setState('lx1_freq', 'Injections per DAY:', 'white');
+        },
+        'lx1_freq': function(input) {
+          var v = toInt(input, false);
+          if (isNaN(v)) { reAsk('lx1_freq', 'Injections per DAY:', 'Invalid. Enter a whole number.'); return; }
+          app._getData().freq = v;
+          app._setState('lx1_days', 'Day supply (days):', 'white');
+        },
+        'lx1_days': function(input) {
+          var v = toInt(input, false);
+          if (isNaN(v)) { reAsk('lx1_days', 'Day supply (days):', 'Invalid. Enter a whole number.'); return; }
+          var d = app._getData();
+          d.days = v;
+          var syringes = d.freq * d.days;
+          var totalMl = syringes * d.ml;
+          app._addOutput('----------------------------', 'blue');
+          app._addOutput(d.freq + '/day x ' + d.days + ' days = ' + syringes + ' injections', 'white');
+          app._addOutput('Each injection = 1 syringe (' + fmt(d.ml) + ' mL)', 'white');
+          app._addOutput('', 'white');
+          app._addOutput('** DISPENSE: ' + syringes + ' syringes **', 'green');
+          app._addOutput('Total volume: ' + fmt(totalMl) + ' mL', 'green');
+          if (d.mg !== null) {
+            app._addOutput('Total: ' + fmt(syringes * d.mg) + ' mg (' + d.mg + 'mg/' + fmt(d.ml) + 'mL)', 'cyan');
+          }
+          app._addOutput('----------------------------', 'blue');
+          app._setState('restart');
+        },
+
+        // --- Mode 2 (sub-calculator): syringes from total mL ---
+        'lx2_total': function(input) {
+          var v = toNum(input, false);
+          if (isNaN(v)) { reAsk('lx2_total', 'Total mL to dispense:'); return; }
+          app._getData().totalMl = v;
+          showStrengthMenu();
+          app._setState('lx2_strength', 'Select (1-' + MANUAL_OPT + '):', 'white');
+        },
+        'lx2_strength': function(input) {
+          var r = readStrength(input, 'lx2_strength');
+          if (r === null) return;
+          var d = app._getData();
+          if (r === 'manual') {
+            d.mg = null;
+            app._setState('lx2_manual_ml', 'mL per syringe:', 'white');
+          } else {
+            d.mg = r[0];
+            d.ml = r[1];
+            sm.lx2_calc();
+          }
+        },
+        'lx2_manual_ml': function(input) {
+          var v = toNum(input, false);
+          if (isNaN(v)) { reAsk('lx2_manual_ml', 'mL per syringe:'); return; }
+          app._getData().ml = v;
+          sm.lx2_calc();
+        },
+        'lx2_calc': function() {
+          var d = app._getData();
+          var exact = d.totalMl / d.ml;
+          var rounded = Math.round(exact);
+          var isWhole = Math.abs(exact - rounded) < 1e-9;
+          app._addOutput('----------------------------', 'blue');
+          app._addOutput(fmt(d.totalMl) + ' mL / ' + fmt(d.ml) + ' mL per syringe', 'white');
+          app._addOutput('', 'white');
+          if (isWhole) {
+            app._addOutput('** SYRINGES NEEDED: ' + rounded + ' **', 'green');
+            if (d.mg !== null) {
+              app._addOutput('Total: ' + fmt(rounded * d.mg) + ' mg (' + d.mg + 'mg/' + fmt(d.ml) + 'mL)', 'cyan');
+            }
+          } else {
+            var up = Math.ceil(exact - 1e-9);
+            app._addOutput('Exact: ' + exact.toFixed(2) + ' syringes', 'white');
+            app._addOutput('** ROUND UP: ' + up + ' syringes **', 'green');
+            app._addOutput('Warning: does not divide evenly.', 'yellow');
+            if (d.mg !== null) {
+              app._addOutput('Total (' + up + ' syringes): ' + fmt(up * d.mg) + ' mg', 'cyan');
+            }
+          }
+          app._addOutput('----------------------------', 'blue');
+          app._setState('restart');
+        },
+
+        'done': function() {
+          sm.restart();
+        },
+        'restart': function() {
+          app._init('lovenox', 'init', {}, sm, true);
+        }
+      };
+
+      app._init('lovenox', 'init', {}, sm);
+    }
+
+    // --- 8. Basic Math Calc ---
+    function runBasicMathCalc(app) {
+      // Data store for the basic calculator
+      // exp: the expression string, con: clearOnNextNum
+      var data = { exp: '0', con: true };
+      var lastCharIsOp = false;
+      var lastCharIsDec = false;
+
+      // Helper to update the display (which is just the last line of output)
+      function updateDisplay(val) {
+        var output = app._getOutput();
+        if (output.length > 0) {
+          output.pop(); // Remove last line
+        }
+        
+        // Add spacing for readability
+        var displayVal = val.replace(/([\+\-\*\/])/g, ' $1 ');
+        
+        if (displayVal.length > 25) { // Truncate display
+            displayVal = '...' + displayVal.slice(displayVal.length - 25);
+        }
+        app._addOutput(displayVal, 'green');
+      }
+      
+      // NEW: Sequential (left-to-right) calculator logic
+      function sequentialEvaluate(expression) {
+        try {
+          // Split on operators, but keep them.
+          // This regex splits on any of +,-,*,/
+          const parts = expression.split(/([\+\-\*\/])/);
+          
+          if (parts.length < 3) {
+            // No operations, just return the number
+            return parseFloat(expression);
+          }
+
+          let result = parseFloat(parts[0]);
+          
+          for (let i = 1; i < parts.length; i += 2) {
+            const operator = parts[i];
+            const nextNumStr = parts[i + 1];
+            
+            // Stop if we hit an incomplete expression like "10-"
+            if (nextNumStr === undefined || nextNumStr === '') break;
+            
+            const nextNum = parseFloat(nextNumStr);
+            if (isNaN(nextNum)) break; 
+
+            if (operator === '/' && nextNum === 0) {
+                return null; // Division by zero
+            }
+            
+            switch (operator) {
+              case '+': result += nextNum; break;
+              case '-': result -= nextNum; break;
+              case '*': result *= nextNum; break;
+              case '/': result /= nextNum; break;
+            }
+          }
+          return result;
+        } catch (e) {
+          console.error("Eval error:", e);
+          return null;
+        }
+      }
+
+      var sm = {
+        'init': function() {
+          data = { exp: '0', con: true };
+          lastCharIsOp = false;
+          lastCharIsDec = false;
+          app._addOutput('0', 'green'); // Initial display
+          app._setState('idle'); // Set a single state
+        },
+        'restart': function() {
+          // Restart is just re-initializing
+          app._init('basicMath', 'init', {}, sm);
+        },
+        'idle': function() {
+          // This state is just a placeholder. All logic is in custom handlers.
+        },
+
+        // --- Custom Handlers for Basic Math ---
+        
+        'handleNumPad': function(num) {
+          if (data.con) {
+            data.exp = ''; // Clear the old result
+            data.con = false;
+          }
+          if (data.exp === '0') data.exp = ''; // Don't allow "07"
+          data.exp += num;
+          lastCharIsOp = false;
+          lastCharIsDec = false;
+          updateDisplay(data.exp);
+        },
+        
+        'handleDecimal': function() {
+          if (data.con) {
+            data.exp = '0'; // Start new number with '0.'
+            data.con = false;
+          }
+          // Only allow one decimal per *number*
+          if (!lastCharIsDec) {
+            data.exp += '.';
+            lastCharIsDec = true;
+          }
+          lastCharIsOp = false;
+          updateDisplay(data.exp);
+        },
+        
+        'handleBackspace': function() {
+          if (data.con) return; // Don't backspace a calculated result
+          
+          var charRemoved = data.exp.slice(-1);
+          data.exp = data.exp.slice(0, -1);
+          
+          if (data.exp === '') {
+            data.exp = '0';
+            data.con = true; // Go back to initial state
+            updateDisplay(data.exp); // Update display to 0
+            return;
+          }
+          
+          // Recalculate lastCharIsOp/Dec
+          var lastChar = data.exp.slice(-1);
+          lastCharIsOp = ['+', '-', '*', '/'].includes(lastChar);
+          // Simple check: just see if the new last char is a decimal
+          lastCharIsDec = lastChar === '.'; 
+          
+          updateDisplay(data.exp);
+        },
+
+        'handleOp': function(op) {
+          // NEW: Handle chaining
+          if (data.con) {
+            // We just got an answer. An operator *continues* the calculation.
+            // data.exp already holds the old result (e.g., "16")
+            data.con = false; // We are now continuing
+            // We're good, data.exp is already set
+          }
+        
+          // If last char was an operator, replace it
+          if (lastCharIsOp) {
+            data.exp = data.exp.slice(0, -1) + op;
+          } else {
+            // Otherwise, just append it
+            data.exp += op;
+          }
+          lastCharIsOp = true;
+          lastCharIsDec = false;
+          updateDisplay(data.exp);
+        },
+
+        'handleClear': function() {
+          data = { exp: '0', con: true };
+          lastCharIsOp = false;
+          lastCharIsDec = false;
+          app._getOutput().length = 0; // Clear history
+          app._addOutput('0', 'green'); // Add the initial '0' line
+        },
+        
+        'handleEnter': function() { // This is the '='
+          if (lastCharIsOp) return; // Don't calculate if ending on an op
+
+          var currentExpression = data.exp;
+          var result = sequentialEvaluate(currentExpression); 
+          
+          if (result === null) {
+            app._getOutput().pop(); // remove expression
+            app._addOutput(currentExpression.replace(/([\+\-\*\/])/g, ' $1 '), 'white'); // Add it back as history
+            app._addOutput('ERROR', 'red');
+            // Set up for next calculation
+            data.exp = '0';
+            data.con = true;
+            lastCharIsOp = false;
+            lastCharIsDec = false;
+            app._addOutput('0', 'green'); // Add new '0' line
+            
+          } else {
+             // Round to a reasonable number of decimals
+            if (!Number.isInteger(result)) {
+                result = parseFloat(result.toPrecision(12));
+            }
+             var resultStr = result.toString();
+             
+             // 1. Finalize the expression line
+             app._getOutput().pop(); // remove green "1+2"
+             app._addOutput(currentExpression.replace(/([\+\-\*\/])/g, ' $1 '), 'white'); // Add it back as white history
+             
+             // 2. Add the answer line
+             app._addOutput('= ' + resultStr, 'green');
+            
+             // 3. Set up for next calculation
+             data.exp = resultStr; // The new expression *starts* as the old result
+             data.con = true; // Set a flag meaning "next keypress starts new line *or* continues"
+             lastCharIsOp = false;
+             lastCharIsDec = data.exp.includes('.');
+             
+             // 4. Add the *new* current line
+             app._addOutput(resultStr, 'green'); // Add a new "current" line
+          }
+        }
+      };
+      
+      // Initialize the app with this state machine
+      app._init('basicMath', 'init', data, sm);
+    }
+
+    // --- Copy results to clipboard ---
+    function copyResults() {
+      if (!currentApp) return;
+      var lines = currentApp._getOutput();
+      var text = '';
+      for (var i = 0; i < lines.length; i++) text += lines[i].text + '\n';
+      var btn = document.getElementById('btn-copy');
+      function flash(ok) {
+        if (!btn) return;
+        btn.textContent = ok ? '\u2713' : 'X';
+        setTimeout(function() { btn.textContent = 'COPY'; }, 1200);
+      }
+      function fallbackCopy(t) {
+        try {
+          var ta = document.createElement('textarea');
+          ta.value = t;
+          ta.style.position = 'fixed';
+          ta.style.opacity = '0';
+          document.body.appendChild(ta);
+          ta.focus();
+          ta.select();
+          var ok = document.execCommand('copy');
+          document.body.removeChild(ta);
+          return ok;
+        } catch (e) { return false; }
+      }
+      if (navigator.clipboard && navigator.clipboard.writeText) {
+        navigator.clipboard.writeText(text).then(function() { flash(true); }, function() { flash(fallbackCopy(text)); });
+      } else {
+        flash(fallbackCopy(text));
+      }
+    }
+
+  </script>
+</body>
+</html>
