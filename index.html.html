@@ -1,0 +1,3585 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="dark">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+  <meta name="mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <title>Pharmacy Calculator Suite v2.0</title>
+  <style>
+    /* =========================================================================
+       DESIGN TOKENS & THEME VARIABLES (100% Self-Contained / Zero Dependencies)
+       ========================================================================= */
+    :root {
+      --font-scale: 1;
+      --radius-xl: 22px;
+      --radius-lg: 16px;
+      --radius-md: 12px;
+      --radius-sm: 8px;
+      --transition: 0.2s cubic-bezier(0.22, 1, 0.36, 1);
+
+      /* Dark Mode Palette (Default) */
+      --bg-body: #090e1a;
+      --bg-mesh-1: rgba(56, 189, 248, 0.14);
+      --bg-mesh-2: rgba(129, 140, 248, 0.13);
+      --bg-surface: rgba(20, 29, 48, 0.85);
+      --bg-surface-solid: #141d30;
+      --bg-elevated: #1c2842;
+      --bg-input: #0e1626;
+      --border: rgba(148, 163, 184, 0.18);
+      --border-strong: rgba(148, 163, 184, 0.32);
+      --text-primary: #f8fafc;
+      --text-secondary: #94a3b8;
+      --text-muted: #64748b;
+      --accent: #38bdf8;
+      --accent-strong: #0284c7;
+      --accent-soft: rgba(56, 189, 248, 0.15);
+      --success: #34d399;
+      --success-bg: rgba(52, 211, 153, 0.14);
+      --warning: #fbbf24;
+      --warning-bg: rgba(251, 191, 36, 0.15);
+      --danger: #f87171;
+      --danger-bg: rgba(248, 113, 113, 0.15);
+      --shadow-card: 0 12px 32px -10px rgba(0, 0, 0, 0.55);
+      --shadow-hover: 0 18px 40px -12px rgba(2, 132, 199, 0.35);
+      --calc-btn-bg: #1c2842;
+      --calc-btn-hover: #253556;
+      --calc-op-bg: #263859;
+    }
+
+    [data-theme="light"] {
+      --bg-body: #f1f5f9;
+      --bg-mesh-1: rgba(14, 165, 233, 0.12);
+      --bg-mesh-2: rgba(99, 102, 241, 0.1);
+      --bg-surface: rgba(255, 255, 255, 0.92);
+      --bg-surface-solid: #ffffff;
+      --bg-elevated: #f8fafc;
+      --bg-input: #ffffff;
+      --border: rgba(15, 23, 42, 0.1);
+      --border-strong: rgba(15, 23, 42, 0.2);
+      --text-primary: #0f172a;
+      --text-secondary: #475569;
+      --text-muted: #64748b;
+      --accent: #0284c7;
+      --accent-strong: #0369a1;
+      --accent-soft: rgba(2, 132, 199, 0.1);
+      --success: #059669;
+      --success-bg: rgba(5, 150, 105, 0.12);
+      --warning: #d97706;
+      --warning-bg: rgba(217, 119, 6, 0.13);
+      --danger: #dc2626;
+      --danger-bg: rgba(220, 38, 38, 0.11);
+      --shadow-card: 0 10px 28px -10px rgba(15, 23, 42, 0.12);
+      --shadow-hover: 0 16px 36px -10px rgba(2, 132, 199, 0.22);
+      --calc-btn-bg: #ffffff;
+      --calc-btn-hover: #f1f5f9;
+      --calc-op-bg: #e0f2fe;
+    }
+
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+      -webkit-tap-highlight-color: transparent;
+    }
+
+    html {
+      font-size: calc(16px * var(--font-scale));
+    }
+
+    body {
+      font-family: "Inter", -apple-system, BlinkMacSystemFont, "SF Pro Display", "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+      background-color: var(--bg-body);
+      background-image:
+        radial-gradient(at 15% 10%, var(--bg-mesh-1) 0px, transparent 50%),
+        radial-gradient(at 88% 15%, var(--bg-mesh-2) 0px, transparent 52%);
+      background-attachment: fixed;
+      color: var(--text-primary);
+      min-height: 100vh;
+      line-height: 1.45;
+      overflow-x: hidden;
+      transition: background-color 0.25s ease, color 0.25s ease;
+    }
+
+    /* =========================================================================
+       TOP BAR NAVIGATION
+       ========================================================================= */
+    .topbar {
+      position: sticky;
+      top: 0;
+      z-index: 50;
+      backdrop-filter: blur(18px);
+      -webkit-backdrop-filter: blur(18px);
+      background: var(--bg-surface);
+      border-bottom: 1px solid var(--border);
+      padding: 0.72rem 1.15rem;
+    }
+
+    .topbar-inner {
+      max-width: 1040px;
+      margin: 0 auto;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 0.75rem;
+    }
+
+    .brand {
+      display: flex;
+      align-items: center;
+      gap: 0.7rem;
+      cursor: pointer;
+      user-select: none;
+      min-width: 0;
+    }
+
+    .brand-icon {
+      width: 42px;
+      height: 42px;
+      flex-shrink: 0;
+    }
+
+    .brand-text h1 {
+      font-size: 1.05rem;
+      font-weight: 800;
+      letter-spacing: -0.02em;
+      line-height: 1.15;
+    }
+
+    .brand-text span {
+      display: block;
+      font-size: 0.74rem;
+      color: var(--text-secondary);
+      font-weight: 600;
+    }
+
+    .topbar-controls {
+      display: flex;
+      align-items: center;
+      gap: 0.42rem;
+      flex-shrink: 0;
+    }
+
+    .icon-btn {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 0.35rem;
+      min-height: 38px;
+      background: var(--bg-elevated);
+      color: var(--text-primary);
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      padding: 0.45rem 0.72rem;
+      font-size: 0.84rem;
+      font-weight: 700;
+      font-family: inherit;
+      cursor: pointer;
+      transition: var(--transition);
+    }
+
+    .icon-btn:hover {
+      border-color: var(--accent);
+      color: var(--accent);
+      transform: translateY(-1px);
+    }
+
+    .icon-btn:active {
+      transform: scale(0.96);
+    }
+
+    /* =========================================================================
+       MAIN CONTAINER & VIEW TRANSITIONS
+       ========================================================================= */
+    main {
+      max-width: 1040px;
+      margin: 0 auto;
+      padding: 1.35rem 1.1rem 3rem;
+    }
+
+    .view {
+      display: none;
+      animation: fadeSlideIn 0.22s ease-out;
+    }
+
+    .view.active {
+      display: block;
+    }
+
+    @keyframes fadeSlideIn {
+      from { opacity: 0; transform: translateY(8px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+
+    /* =========================================================================
+       HOME MENU GRID
+       ========================================================================= */
+    .hero {
+      text-align: center;
+      margin-bottom: 1.55rem;
+    }
+
+    .hero-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.4rem;
+      font-size: 0.74rem;
+      font-weight: 800;
+      text-transform: uppercase;
+      letter-spacing: 0.06em;
+      color: var(--accent);
+      background: var(--accent-soft);
+      padding: 0.32rem 0.82rem;
+      border-radius: 999px;
+      margin-bottom: 0.65rem;
+    }
+
+    .hero h2 {
+      font-size: 1.72rem;
+      font-weight: 800;
+      letter-spacing: -0.03em;
+      margin-bottom: 0.35rem;
+    }
+
+    .hero p {
+      color: var(--text-secondary);
+      font-size: 0.94rem;
+      max-width: 560px;
+      margin: 0 auto;
+    }
+
+    .menu-grid {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 0.95rem;
+    }
+
+    @media (min-width: 780px) {
+      .menu-grid {
+        grid-template-columns: repeat(4, 1fr);
+      }
+    }
+
+    @media (max-width: 440px) {
+      .menu-grid {
+        grid-template-columns: 1fr;
+      }
+    }
+
+    .tool-card {
+      position: relative;
+      display: flex;
+      flex-direction: column;
+      align-items: flex-start;
+      gap: 0.72rem;
+      padding: 1.15rem;
+      background: var(--bg-surface);
+      backdrop-filter: blur(14px);
+      -webkit-backdrop-filter: blur(14px);
+      border: 1.5px solid var(--border);
+      border-radius: var(--radius-xl);
+      box-shadow: var(--shadow-card);
+      cursor: pointer;
+      text-align: left;
+      color: inherit;
+      font-family: inherit;
+      transition: var(--transition);
+      overflow: hidden;
+    }
+
+    .tool-card::after {
+      content: "";
+      position: absolute;
+      inset: 0;
+      border-radius: var(--radius-xl);
+      background: linear-gradient(135deg, rgba(255, 255, 255, 0.06), transparent 60%);
+      pointer-events: none;
+    }
+
+    .tool-card:hover {
+      transform: translateY(-4px);
+      border-color: var(--accent);
+      box-shadow: var(--shadow-hover);
+    }
+
+    .tool-card:active {
+      transform: translateY(-1px) scale(0.985);
+    }
+
+    .tool-card-top {
+      width: 100%;
+      display: flex;
+      align-items: flex-start;
+      justify-content: space-between;
+    }
+
+    .clipart-badge {
+      width: 62px;
+      height: 62px;
+      border-radius: 17px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.35), 0 6px 14px -6px rgba(0, 0, 0, 0.35);
+      flex-shrink: 0;
+    }
+
+    .clipart-badge svg {
+      width: 48px;
+      height: 48px;
+      filter: drop-shadow(0 2px 3px rgba(0, 0, 0, 0.2));
+    }
+
+    .shortcut-pill {
+      font-size: 0.74rem;
+      font-weight: 800;
+      color: var(--text-muted);
+      background: var(--bg-elevated);
+      border: 1px solid var(--border);
+      padding: 0.18rem 0.52rem;
+      border-radius: 7px;
+      font-variant-numeric: tabular-nums;
+    }
+
+    .tool-card h3 {
+      font-size: 1rem;
+      font-weight: 800;
+      letter-spacing: -0.015em;
+      margin-bottom: 0.2rem;
+    }
+
+    .tool-card p {
+      font-size: 0.81rem;
+      color: var(--text-secondary);
+      line-height: 1.38;
+    }
+
+    /* Vibrant Clipart Badge Backgrounds */
+    .bg-cyan    { background: linear-gradient(135deg, #bae6fd, #38bdf8); }
+    .bg-orange  { background: linear-gradient(135deg, #fed7aa, #fb923c); }
+    .bg-amber   { background: linear-gradient(135deg, #fef08a, #f59e0b); }
+    .bg-rose    { background: linear-gradient(135deg, #fecdd3, #fb7185); }
+    .bg-green   { background: linear-gradient(135deg, #bbf7d0, #34d399); }
+    .bg-emerald { background: linear-gradient(135deg, #a7f3d0, #10b981); }
+    .bg-pink    { background: linear-gradient(135deg, #fbcfe8, #ec4899); }
+    .bg-indigo  { background: linear-gradient(135deg, #c7d2fe, #6366f1); }
+
+    /* =========================================================================
+       CALCULATOR HEADER & SHARED BUTTONS
+       ========================================================================= */
+    .calc-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      flex-wrap: wrap;
+      gap: 0.85rem;
+      margin-bottom: 1.15rem;
+    }
+
+    .calc-title-group {
+      display: flex;
+      align-items: center;
+      gap: 0.85rem;
+    }
+
+    .calc-header-icon {
+      width: 52px;
+      height: 52px;
+      border-radius: 15px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      flex-shrink: 0;
+      box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.35), 0 6px 14px -6px rgba(0, 0, 0, 0.32);
+    }
+
+    .calc-header-icon svg {
+      width: 40px;
+      height: 40px;
+    }
+
+    .calc-title-group h2 {
+      font-size: 1.32rem;
+      font-weight: 800;
+      letter-spacing: -0.02em;
+    }
+
+    .calc-title-group p {
+      font-size: 0.84rem;
+      color: var(--text-secondary);
+    }
+
+    .calc-actions {
+      display: flex;
+      gap: 0.5rem;
+      flex-wrap: wrap;
+    }
+
+    .btn {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 0.38rem;
+      min-height: 40px;
+      padding: 0.55rem 0.95rem;
+      border-radius: var(--radius-md);
+      font-size: 0.86rem;
+      font-weight: 700;
+      cursor: pointer;
+      border: 1px solid var(--border);
+      background: var(--bg-elevated);
+      color: var(--text-primary);
+      transition: var(--transition);
+      font-family: inherit;
+    }
+
+    .btn:hover:not(:disabled) {
+      border-color: var(--accent);
+      transform: translateY(-1px);
+    }
+
+    .btn:active:not(:disabled) {
+      transform: scale(0.97);
+    }
+
+    .btn:disabled {
+      opacity: 0.45;
+      cursor: not-allowed;
+    }
+
+    .btn-primary {
+      background: linear-gradient(135deg, #0ea5e9, #2563eb);
+      color: #ffffff;
+      border-color: transparent;
+      box-shadow: 0 6px 16px -6px rgba(37, 99, 235, 0.55);
+    }
+
+    .btn-primary:hover:not(:disabled) {
+      color: #ffffff;
+      filter: brightness(1.07);
+      border-color: transparent;
+    }
+
+    .btn-danger {
+      background: var(--danger-bg);
+      color: var(--danger);
+      border-color: rgba(248, 113, 113, 0.32);
+    }
+
+    .btn-sm {
+      min-height: 34px;
+      padding: 0.36rem 0.68rem;
+      font-size: 0.79rem;
+      border-radius: var(--radius-sm);
+    }
+
+    /* =========================================================================
+       RESPONSIVE WORKSPACE & GLASS CARDS
+       ========================================================================= */
+    .workspace {
+      display: grid;
+      grid-template-columns: 1.15fr 0.85fr;
+      gap: 1.05rem;
+      align-items: start;
+    }
+
+    .workspace.single-col {
+      grid-template-columns: 1fr;
+      max-width: 540px;
+      margin: 0 auto;
+    }
+
+    @media (max-width: 820px) {
+      .workspace {
+        grid-template-columns: 1fr;
+      }
+    }
+
+    .panel {
+      background: var(--bg-surface);
+      backdrop-filter: blur(14px);
+      -webkit-backdrop-filter: blur(14px);
+      border: 1.5px solid var(--border);
+      border-radius: var(--radius-xl);
+      padding: 1.25rem;
+      box-shadow: var(--shadow-card);
+    }
+
+    .panel-title {
+      font-size: 0.8rem;
+      font-weight: 800;
+      text-transform: uppercase;
+      letter-spacing: 0.06em;
+      color: var(--text-secondary);
+      margin-bottom: 0.95rem;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 0.5rem;
+      flex-wrap: wrap;
+    }
+
+    /* =========================================================================
+       FORM CONTROLS, TABS, PILLS & CUSTOM EARLY-FILL BAR
+       ========================================================================= */
+    .field-grid {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 0.85rem;
+    }
+
+    @media (max-width: 520px) {
+      .field-grid {
+        grid-template-columns: 1fr;
+      }
+    }
+
+    .field {
+      display: flex;
+      flex-direction: column;
+      gap: 0.35rem;
+      margin-bottom: 0.85rem;
+    }
+
+    .field-grid .field {
+      margin-bottom: 0;
+    }
+
+    label {
+      font-size: 0.82rem;
+      font-weight: 700;
+      color: var(--text-secondary);
+    }
+
+    input[type="text"],
+    input[type="number"],
+    input[type="date"],
+    select {
+      width: 100%;
+      padding: 0.68rem 0.85rem;
+      border-radius: var(--radius-md);
+      border: 1.5px solid var(--border-strong);
+      background: var(--bg-input);
+      color: var(--text-primary);
+      font-size: 0.98rem;
+      font-weight: 600;
+      font-family: inherit;
+      transition: border-color 0.18s, box-shadow 0.18s;
+      font-variant-numeric: tabular-nums;
+    }
+
+    input:disabled {
+      opacity: 0.5;
+      cursor: not-allowed;
+    }
+
+    input:focus, select:focus {
+      outline: none;
+      border-color: var(--accent);
+      box-shadow: 0 0 0 3px var(--accent-soft);
+    }
+
+    input.input-invalid {
+      border-color: var(--danger);
+      box-shadow: 0 0 0 3px var(--danger-bg);
+    }
+
+    /* Ensure dark/light date picker icon stays clearly visible */
+    [data-theme="dark"] input[type="date"] { color-scheme: dark; }
+    [data-theme="light"] input[type="date"] { color-scheme: light; }
+
+    .input-row {
+      display: flex;
+      gap: 0.5rem;
+      align-items: center;
+    }
+
+    .input-row input {
+      flex: 1;
+      min-width: 0;
+    }
+
+    .tabs {
+      display: flex;
+      gap: 0.35rem;
+      background: var(--bg-input);
+      padding: 0.3rem;
+      border-radius: var(--radius-md);
+      border: 1px solid var(--border);
+      margin-bottom: 1rem;
+      flex-wrap: wrap;
+    }
+
+    .tab-btn {
+      flex: 1;
+      min-width: 100px;
+      padding: 0.52rem 0.65rem;
+      border: none;
+      border-radius: 9px;
+      background: transparent;
+      color: var(--text-secondary);
+      font-size: 0.82rem;
+      font-weight: 700;
+      cursor: pointer;
+      transition: var(--transition);
+      font-family: inherit;
+      text-align: center;
+    }
+
+    .tab-btn.active {
+      background: var(--accent);
+      color: #ffffff;
+      box-shadow: 0 4px 12px -4px rgba(14, 165, 233, 0.55);
+    }
+
+    .pill-row {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 0.42rem;
+      margin-top: 0.35rem;
+    }
+
+    .pill {
+      padding: 0.38rem 0.72rem;
+      border-radius: 999px;
+      border: 1px solid var(--border-strong);
+      background: var(--bg-elevated);
+      color: var(--text-secondary);
+      font-size: 0.79rem;
+      font-weight: 700;
+      cursor: pointer;
+      transition: var(--transition);
+      font-family: inherit;
+    }
+
+    .pill:hover, .pill.active {
+      background: var(--accent-soft);
+      border-color: var(--accent);
+      color: var(--accent);
+    }
+
+    /* Controlled Substance Early Fill Window (Presets + Custom Input) */
+    .early-window-box {
+      display: flex;
+      flex-wrap: wrap;
+      align-items: center;
+      justify-content: space-between;
+      gap: 0.65rem;
+      padding: 0.72rem 0.82rem;
+      border-radius: var(--radius-md);
+      background: var(--bg-elevated);
+      border: 1px solid var(--border);
+    }
+
+    .early-window-box .pill-row {
+      margin-top: 0;
+      flex: 1 1 auto;
+    }
+
+    .custom-early-group {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.48rem;
+      flex-shrink: 0;
+    }
+
+    .custom-early-group label {
+      font-size: 0.78rem;
+      white-space: nowrap;
+      color: var(--text-secondary);
+    }
+
+    .custom-early-input {
+      width: 96px !important;
+      padding: 0.44rem 0.65rem !important;
+      font-size: 0.9rem !important;
+      text-align: center;
+      border-radius: 10px !important;
+    }
+
+    @media (max-width: 480px) {
+      .custom-early-group {
+        width: 100%;
+        justify-content: space-between;
+        padding-top: 0.45rem;
+        border-top: 1px dashed var(--border);
+      }
+      .custom-early-input {
+        width: 118px !important;
+      }
+    }
+
+    /* =========================================================================
+       CROSS MULTIPLY FRACTION LAYOUT
+       ========================================================================= */
+    .proportion-box {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 1rem;
+      padding: 0.8rem 0.2rem;
+    }
+
+    .fraction-col {
+      display: flex;
+      flex-direction: column;
+      gap: 0.55rem;
+      flex: 1;
+      max-width: 185px;
+    }
+
+    .fraction-bar {
+      height: 3.5px;
+      background: var(--accent);
+      border-radius: 99px;
+    }
+
+    .fraction-eq {
+      font-size: 1.85rem;
+      font-weight: 800;
+      color: var(--accent);
+    }
+
+    .fraction-input {
+      text-align: center;
+      font-size: 1.15rem !important;
+      padding: 0.75rem 0.5rem !important;
+    }
+
+    /* =========================================================================
+       DYNAMIC TAPER / WEEKLY STEP LISTS
+       ========================================================================= */
+    .step-list {
+      display: flex;
+      flex-direction: column;
+      gap: 0.58rem;
+      margin-bottom: 0.85rem;
+    }
+
+    .step-row {
+      display: grid;
+      grid-template-columns: auto 1fr 1fr auto;
+      gap: 0.5rem;
+      align-items: center;
+      padding: 0.62rem;
+      border-radius: var(--radius-md);
+      background: var(--bg-elevated);
+      border: 1px solid var(--border);
+    }
+
+    .step-row.has-rest {
+      grid-template-columns: auto 1fr 1fr auto auto;
+    }
+
+    .step-row.week-only {
+      grid-template-columns: auto 1fr auto;
+    }
+
+    @media (max-width: 560px) {
+      .step-row, .step-row.has-rest {
+        grid-template-columns: 1fr 1fr;
+      }
+      .step-row.week-only {
+        grid-template-columns: auto 1fr auto;
+      }
+      .step-row:not(.week-only) .step-num {
+        grid-column: 1 / -1;
+        justify-self: start;
+      }
+    }
+
+    .step-num {
+      font-size: 0.76rem;
+      font-weight: 800;
+      color: var(--accent);
+      background: var(--accent-soft);
+      padding: 0.26rem 0.54rem;
+      border-radius: 7px;
+      white-space: nowrap;
+    }
+
+    .check-label {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.4rem;
+      font-size: 0.8rem;
+      font-weight: 700;
+      color: var(--text-secondary);
+      cursor: pointer;
+      user-select: none;
+    }
+
+    .check-label input[type="checkbox"] {
+      width: 17px;
+      height: 17px;
+      accent-color: var(--accent);
+      cursor: pointer;
+      flex-shrink: 0;
+    }
+
+    /* =========================================================================
+       RESULT HERO CARDS, STATS & VERIFICATION BREAKDOWN
+       ========================================================================= */
+    .result-hero {
+      padding: 1.15rem;
+      border-radius: var(--radius-lg);
+      background: var(--accent-soft);
+      border: 1.5px solid rgba(56, 189, 248, 0.35);
+      margin-bottom: 0.95rem;
+    }
+
+    .result-hero.success {
+      background: var(--success-bg);
+      border-color: rgba(52, 211, 153, 0.4);
+    }
+
+    .result-hero.warning {
+      background: var(--warning-bg);
+      border-color: rgba(251, 191, 36, 0.45);
+    }
+
+    .result-hero.danger {
+      background: var(--danger-bg);
+      border-color: rgba(248, 113, 113, 0.45);
+    }
+
+    .result-hero.muted {
+      background: var(--bg-elevated);
+      border-color: var(--border-strong);
+    }
+
+    .result-label {
+      font-size: 0.76rem;
+      font-weight: 800;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      color: var(--text-secondary);
+      margin-bottom: 0.25rem;
+    }
+
+    .result-value {
+      font-size: 1.82rem;
+      font-weight: 800;
+      letter-spacing: -0.025em;
+      font-variant-numeric: tabular-nums;
+      line-height: 1.2;
+      word-break: break-word;
+    }
+
+    .result-sub {
+      font-size: 0.86rem;
+      font-weight: 600;
+      color: var(--text-secondary);
+      margin-top: 0.35rem;
+    }
+
+    .stat-grid {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 0.65rem;
+      margin-bottom: 0.95rem;
+    }
+
+    .stat-box {
+      padding: 0.75rem;
+      border-radius: var(--radius-md);
+      background: var(--bg-elevated);
+      border: 1px solid var(--border);
+    }
+
+    .stat-box .k {
+      font-size: 0.73rem;
+      font-weight: 700;
+      color: var(--text-secondary);
+      text-transform: uppercase;
+      letter-spacing: 0.04em;
+    }
+
+    .stat-box .v {
+      font-size: 1.08rem;
+      font-weight: 800;
+      margin-top: 0.16rem;
+      font-variant-numeric: tabular-nums;
+    }
+
+    .breakdown {
+      background: var(--bg-input);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-md);
+      padding: 0.85rem;
+      font-size: 0.83rem;
+      color: var(--text-secondary);
+      display: flex;
+      flex-direction: column;
+      gap: 0.4rem;
+    }
+
+    .breakdown-line {
+      display: flex;
+      justify-content: space-between;
+      gap: 0.75rem;
+      padding-bottom: 0.34rem;
+      border-bottom: 1px dashed var(--border);
+    }
+
+    .breakdown-line:last-child {
+      border-bottom: none;
+      padding-bottom: 0;
+    }
+
+    .breakdown-line strong {
+      color: var(--text-primary);
+      font-variant-numeric: tabular-nums;
+      text-align: right;
+    }
+
+    .alert-note {
+      padding: 0.72rem 0.88rem;
+      border-radius: var(--radius-md);
+      font-size: 0.85rem;
+      font-weight: 600;
+      margin-bottom: 0.85rem;
+    }
+
+    .alert-note.warn { background: var(--warning-bg); color: var(--warning); }
+    .alert-note.err  { background: var(--danger-bg); color: var(--danger); }
+    .alert-note.ok   { background: var(--success-bg); color: var(--success); }
+
+    /* =========================================================================
+       MED COST ADJUSTER LIST
+       ========================================================================= */
+    .med-price-item {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 0.6rem;
+      padding: 0.72rem 0.88rem;
+      border-radius: var(--radius-md);
+      background: var(--bg-elevated);
+      border: 1.5px solid var(--border);
+      margin-bottom: 0.55rem;
+      cursor: pointer;
+      transition: var(--transition);
+    }
+
+    .med-price-item:hover {
+      border-color: var(--accent);
+    }
+
+    .med-price-item.selected {
+      border-color: var(--accent);
+      background: var(--accent-soft);
+    }
+
+    .med-price-info {
+      display: flex;
+      flex-direction: column;
+      gap: 0.1rem;
+      min-width: 0;
+    }
+
+    .med-price-name {
+      font-size: 0.9rem;
+      font-weight: 700;
+      word-break: break-word;
+    }
+
+    .med-price-val {
+      font-size: 1.08rem;
+      font-weight: 800;
+      color: var(--accent);
+      font-variant-numeric: tabular-nums;
+    }
+
+    /* =========================================================================
+       BASIC MATH CALCULATOR
+       ========================================================================= */
+    .math-shell {
+      display: flex;
+      flex-direction: column;
+      gap: 0.85rem;
+    }
+
+    .math-display {
+      background: var(--bg-input);
+      border: 1.5px solid var(--border-strong);
+      border-radius: var(--radius-lg);
+      padding: 1rem 1.15rem;
+      text-align: right;
+      min-height: 120px;
+      display: flex;
+      flex-direction: column;
+      justify-content: flex-end;
+    }
+
+    .math-tape {
+      max-height: 120px;
+      overflow-y: auto;
+      display: flex;
+      flex-direction: column;
+      gap: 0.25rem;
+      margin-bottom: 0.5rem;
+      border-bottom: 1px solid var(--border);
+      padding-bottom: 0.48rem;
+    }
+
+    .tape-item {
+      font-size: 0.82rem;
+      color: var(--text-secondary);
+      cursor: pointer;
+      display: flex;
+      justify-content: space-between;
+      gap: 0.5rem;
+      padding: 0.22rem 0.4rem;
+      border-radius: 7px;
+      transition: background 0.15s;
+    }
+
+    .tape-item:hover {
+      background: var(--accent-soft);
+      color: var(--text-primary);
+    }
+
+    .math-expr {
+      font-size: 0.95rem;
+      color: var(--text-secondary);
+      min-height: 1.35rem;
+      word-break: break-all;
+      font-variant-numeric: tabular-nums;
+    }
+
+    .math-curr {
+      font-size: 2.15rem;
+      font-weight: 800;
+      letter-spacing: -0.02em;
+      font-variant-numeric: tabular-nums;
+      word-break: break-all;
+      color: var(--text-primary);
+    }
+
+    .math-grid {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 0.55rem;
+    }
+
+    .math-key {
+      padding: 0.98rem 0.5rem;
+      font-size: 1.24rem;
+      font-weight: 800;
+      border-radius: var(--radius-md);
+      border: 1.5px solid var(--border);
+      background: var(--calc-btn-bg);
+      color: var(--text-primary);
+      cursor: pointer;
+      transition: var(--transition);
+      font-family: inherit;
+      user-select: none;
+    }
+
+    .math-key:hover {
+      background: var(--calc-btn-hover);
+      border-color: var(--accent);
+    }
+
+    .math-key:active {
+      transform: scale(0.95);
+    }
+
+    .math-key.op {
+      background: var(--calc-op-bg);
+      color: var(--accent);
+    }
+
+    .math-key.danger {
+      background: var(--danger-bg);
+      color: var(--danger);
+      border-color: rgba(248, 113, 113, 0.3);
+    }
+
+    .math-key.eq {
+      background: linear-gradient(135deg, #0ea5e9, #2563eb);
+      color: #ffffff;
+      border-color: transparent;
+      box-shadow: 0 6px 16px -6px rgba(37, 99, 235, 0.55);
+    }
+
+    /* =========================================================================
+       TOAST NOTIFICATION & FOOTER
+       ========================================================================= */
+    .toast {
+      position: fixed;
+      bottom: 1.4rem;
+      left: 50%;
+      transform: translateX(-50%) translateY(20px);
+      background: #0f172a;
+      color: #ffffff;
+      padding: 0.62rem 1.18rem;
+      border-radius: 999px;
+      font-size: 0.85rem;
+      font-weight: 700;
+      box-shadow: 0 12px 30px rgba(0, 0, 0, 0.4);
+      opacity: 0;
+      pointer-events: none;
+      transition: 0.24s ease;
+      z-index: 100;
+      border: 1px solid rgba(255, 255, 255, 0.16);
+    }
+
+    .toast.show {
+      opacity: 1;
+      transform: translateX(-50%) translateY(0);
+    }
+
+    .footer {
+      text-align: center;
+      color: var(--text-muted);
+      font-size: 0.78rem;
+      margin-top: 2rem;
+    }
+  </style>
+</head>
+<body>
+
+  <!-- Top Navigation Header -->
+  <header class="topbar">
+    <div class="topbar-inner">
+      <div class="brand" onclick="navigate('menu')" title="Back to Home Menu (Esc)">
+        <!-- Custom Clipart-Style Rx Mortar & Pestle SVG Logo -->
+        <svg class="brand-icon" viewBox="0 0 64 64" fill="none" aria-hidden="true">
+          <rect x="4" y="4" width="56" height="56" rx="16" fill="#0ea5e9" stroke="#0f172a" stroke-width="3"/>
+          <path d="M41 12L49 17L39 33L31 28L41 12Z" fill="#fde047" stroke="#0f172a" stroke-width="2.5" stroke-linejoin="round"/>
+          <path d="M14 31H50C50 43 43 50 32 50C21 50 14 43 14 31Z" fill="#ffffff" stroke="#0f172a" stroke-width="2.5" stroke-linejoin="round"/>
+          <rect x="23" y="49" width="18" height="5" rx="2.5" fill="#cbd5e1" stroke="#0f172a" stroke-width="2.5"/>
+          <path d="M29 36H35M32 33V39" stroke="#ef4444" stroke-width="3" stroke-linecap="round"/>
+        </svg>
+        <div class="brand-text">
+          <h1>Pharmacy Calculator Suite</h1>
+          <span>Clinical Verification Tools v2.0</span>
+        </div>
+      </div>
+
+      <div class="topbar-controls">
+        <button class="icon-btn" id="btn-home" style="display:none;" onclick="navigate('menu')" title="Home Menu (Esc)">← Menu</button>
+        <button class="icon-btn" onclick="adjustFont(-0.08)" title="Decrease text size">A-</button>
+        <button class="icon-btn" onclick="adjustFont(0.08)" title="Increase text size">A+</button>
+        <button class="icon-btn" id="btn-theme" onclick="toggleTheme()" title="Toggle Light/Dark Mode" aria-label="Toggle Light or Dark Theme">☀️</button>
+      </div>
+    </div>
+  </header>
+
+  <main>
+    <!-- Home Menu View -->
+    <section id="view-menu" class="view active">
+      <div class="hero">
+        <div class="hero-badge">Press keys 1–8 for instant launch</div>
+        <h2>Select a Pharmacy Calculator</h2>
+        <p>Live verification math, precision day-supply engines, and one-click clinical note summaries.</p>
+      </div>
+
+      <div class="menu-grid" id="menu-grid"></div>
+
+      <div class="footer">
+        Pharmacy Calculator Suite v2.0 &bull; Always double-check clinical calculations per professional judgment.
+      </div>
+    </section>
+
+    <!-- Calculator Workspace View -->
+    <section id="view-calc" class="view">
+      <div class="calc-header">
+        <div class="calc-title-group">
+          <div id="calc-header-icon" class="calc-header-icon"></div>
+          <div>
+            <h2 id="calc-header-title">Calculator</h2>
+            <p id="calc-header-desc">Description</p>
+          </div>
+        </div>
+        <div class="calc-actions">
+          <button class="btn" id="btn-copy-summary" onclick="copyCurrentSummary()">📋 Copy Summary</button>
+          <button class="btn btn-danger" onclick="resetCurrentCalc()">↺ Reset</button>
+        </div>
+      </div>
+
+      <div id="calc-body"></div>
+    </section>
+  </main>
+
+  <!-- Toast Notification -->
+  <div id="toast" class="toast" role="status" aria-live="polite"></div>
+
+  <script>
+    /* =========================================================================
+       SAFE STORAGE, PRECISION MATH, UTC DATE & UI UTILITIES
+       ========================================================================= */
+    const SCALE = 10000;
+
+    function safeGetStorage(key, fallback) {
+      try {
+        const v = window.localStorage.getItem(key);
+        return v !== null ? v : fallback;
+      } catch (e) {
+        return fallback;
+      }
+    }
+
+    function safeSetStorage(key, val) {
+      try {
+        window.localStorage.setItem(key, String(val));
+      } catch (e) {
+        // Ignore storage errors inside restricted sandboxed iframes
+      }
+    }
+
+    /** Round a floating-point number safely without -0 artifacts */
+    function roundFix(n, decimals = 6) {
+      if (!Number.isFinite(n)) return 0;
+      const factor = Math.pow(10, decimals);
+      const r = Math.round((n + Number.EPSILON) * factor) / factor;
+      return Object.is(r, -0) ? 0 : r;
+    }
+
+    /** Format numeric values cleanly with commas and capped decimals */
+    function fmtNum(n, maxDec = 2) {
+      if (!Number.isFinite(n)) return '—';
+      const fixed = roundFix(n, maxDec);
+      return fixed.toLocaleString('en-US', { maximumFractionDigits: maxDec });
+    }
+
+    /** Format exact integer cents into $X,XXX.XX */
+    function fmtCurrency(cents) {
+      const neg = cents < 0 ? '-' : '';
+      const abs = Math.abs(Math.round(cents));
+      const dollars = Math.floor(abs / 100);
+      const rem = String(abs % 100).padStart(2, '0');
+      return `${neg}$${dollars.toLocaleString('en-US')}.${rem}`;
+    }
+
+    /** Escape user-supplied text before injecting into HTML */
+    function escapeHtml(str) {
+      return String(str)
+        .replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;')
+        .replace(/"/g, '&quot;')
+        .replace(/'/g, '&#39;');
+    }
+
+    /** Strict decimal parser rejecting stray dots, spaces, or trailing text */
+    function parseStrictFloat(val) {
+      if (val === null || val === undefined) return NaN;
+      const s = String(val).trim();
+      if (s === '' || s === '.' || s === '-' || s === '-.') return NaN;
+      if (!/^-?\d*(\.\d+)?$/.test(s)) return NaN;
+      const n = Number(s);
+      return Number.isFinite(n) ? n : NaN;
+    }
+
+    /** Local today formatted as YYYY-MM-DD for native date pickers */
+    function todayISO() {
+      const now = new Date();
+      const y = now.getFullYear();
+      const m = String(now.getMonth() + 1).padStart(2, '0');
+      const d = String(now.getDate()).padStart(2, '0');
+      return `${y}-${m}-${d}`;
+    }
+
+    /** Parse YYYY-MM-DD strictly in UTC so DST transitions never shift days */
+    function parseISODateUTC(iso) {
+      if (!iso || !/^\d{4}-\d{2}-\d{2}$/.test(iso)) return null;
+      const parts = iso.split('-').map(Number);
+      const dt = new Date(Date.UTC(parts[0], parts[1] - 1, parts[2]));
+      if (dt.getUTCFullYear() !== parts[0] || dt.getUTCMonth() + 1 !== parts[1] || dt.getUTCDate() !== parts[2]) {
+        return null;
+      }
+      return dt;
+    }
+
+    /** Add integer calendar days in UTC */
+    function addDaysUTC(dt, days) {
+      return new Date(dt.getTime() + days * 86400000);
+    }
+
+    /** Exact day difference (d2 - d1) in UTC */
+    function diffDaysUTC(d1, d2) {
+      return Math.round((d2.getTime() - d1.getTime()) / 86400000);
+    }
+
+    function fmtDateDisplay(dt) {
+      if (!dt || isNaN(dt.getTime())) return '—';
+      const months = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+      const days = ['Sun','Mon','Tue','Wed','Thu','Fri','Sat'];
+      const mm = String(dt.getUTCMonth() + 1).padStart(2, '0');
+      const dd = String(dt.getUTCDate()).padStart(2, '0');
+      const yyyy = dt.getUTCFullYear();
+      return `${mm}/${dd}/${yyyy} (${days[dt.getUTCDay()]}, ${months[dt.getUTCMonth()]} ${dt.getUTCDate()})`;
+    }
+
+    function fmtDateShort(dt) {
+      if (!dt || isNaN(dt.getTime())) return '—';
+      const mm = String(dt.getUTCMonth() + 1).padStart(2, '0');
+      const dd = String(dt.getUTCDate()).padStart(2, '0');
+      return `${mm}/${dd}/${dt.getUTCFullYear()}`;
+    }
+
+    function vibrate() {
+      try {
+        if (navigator.vibrate) navigator.vibrate(8);
+      } catch (e) {}
+    }
+
+    let toastTimer = null;
+    function showToast(msg) {
+      const el = document.getElementById('toast');
+      el.textContent = msg;
+      el.classList.add('show');
+      clearTimeout(toastTimer);
+      toastTimer = setTimeout(() => el.classList.remove('show'), 2200);
+    }
+
+    /* =========================================================================
+       CLIPART-STYLE INLINE SVG ICONS (Bold Dark Outlines + Vibrant Fills)
+       ========================================================================= */
+    const ICONS = {
+      ratio: `<svg viewBox="0 0 64 64" fill="none" aria-hidden="true">
+        <rect x="8" y="10" width="19" height="16" rx="4" fill="#ffffff" stroke="#0f172a" stroke-width="2.6"/>
+        <text x="17.5" y="22.5" text-anchor="middle" font-family="sans-serif" font-weight="900" font-size="12" fill="#0284c7">A</text>
+        <line x1="7" y1="32" x2="28" y2="32" stroke="#0f172a" stroke-width="3.2" stroke-linecap="round"/>
+        <rect x="8" y="38" width="19" height="16" rx="4" fill="#fde047" stroke="#0f172a" stroke-width="2.6"/>
+        <text x="17.5" y="50.5" text-anchor="middle" font-family="sans-serif" font-weight="900" font-size="12" fill="#0f172a">B</text>
+        <path d="M30 28H35M30 36H35" stroke="#0f172a" stroke-width="3" stroke-linecap="round"/>
+        <rect x="37" y="10" width="19" height="16" rx="4" fill="#ffffff" stroke="#0f172a" stroke-width="2.6"/>
+        <text x="46.5" y="22.5" text-anchor="middle" font-family="sans-serif" font-weight="900" font-size="12" fill="#0284c7">C</text>
+        <line x1="36" y1="32" x2="57" y2="32" stroke="#0f172a" stroke-width="3.2" stroke-linecap="round"/>
+        <rect x="37" y="38" width="19" height="16" rx="4" fill="#fb7185" stroke="#0f172a" stroke-width="2.6"/>
+        <text x="46.5" y="50.5" text-anchor="middle" font-family="sans-serif" font-weight="900" font-size="12" fill="#ffffff">X</text>
+      </svg>`,
+
+      mtaper: `<svg viewBox="0 0 64 64" fill="none" aria-hidden="true">
+        <path d="M12 12L52 30" stroke="#0f172a" stroke-width="2.8" stroke-linecap="round" stroke-dasharray="4 4"/>
+        <path d="M47 22L53 30L44 32" stroke="#0f172a" stroke-width="2.8" stroke-linecap="round" stroke-linejoin="round"/>
+        <rect x="8" y="20" width="14" height="36" rx="7" fill="#ffffff" stroke="#0f172a" stroke-width="2.6"/>
+        <path d="M8 38H22V49C22 52.866 18.866 56 15 56C11.134 56 8 52.866 8 49V38Z" fill="#ef4444" stroke="#0f172a" stroke-width="2.6"/>
+        <rect x="26" y="30" width="14" height="26" rx="7" fill="#ffffff" stroke="#0f172a" stroke-width="2.6"/>
+        <path d="M26 43H40V49C40 52.866 36.866 56 33 56C29.134 56 26 52.866 26 49V43Z" fill="#f97316" stroke="#0f172a" stroke-width="2.6"/>
+        <rect x="44" y="40" width="14" height="16" rx="7" fill="#fde047" stroke="#0f172a" stroke-width="2.6"/>
+      </svg>`,
+
+      prednisone: `<svg viewBox="0 0 64 64" fill="none" aria-hidden="true">
+        <rect x="10" y="8" width="44" height="48" rx="8" fill="#e2e8f0" stroke="#0f172a" stroke-width="2.6"/>
+        <rect x="15" y="13" width="34" height="38" rx="4" fill="#ffffff" stroke="#0f172a" stroke-width="2"/>
+        <circle cx="23" cy="21" r="4.5" fill="#f59e0b" stroke="#0f172a" stroke-width="2"/>
+        <circle cx="32" cy="21" r="4.5" fill="#f59e0b" stroke="#0f172a" stroke-width="2"/>
+        <circle cx="41" cy="21" r="4.5" fill="#f59e0b" stroke="#0f172a" stroke-width="2"/>
+        <circle cx="23" cy="33" r="4.5" fill="#fbbf24" stroke="#0f172a" stroke-width="2"/>
+        <circle cx="32" cy="33" r="4.5" fill="#fbbf24" stroke="#0f172a" stroke-width="2"/>
+        <circle cx="23" cy="44" r="4.5" fill="#fde047" stroke="#0f172a" stroke-width="2"/>
+        <line x1="20.5" y1="21" x2="25.5" y2="21" stroke="#0f172a" stroke-width="1.5"/>
+        <line x1="29.5" y1="21" x2="34.5" y2="21" stroke="#0f172a" stroke-width="1.5"/>
+        <line x1="38.5" y1="21" x2="43.5" y2="21" stroke="#0f172a" stroke-width="1.5"/>
+      </svg>`,
+
+      control: `<svg viewBox="0 0 64 64" fill="none" aria-hidden="true">
+        <rect x="8" y="14" width="42" height="40" rx="7" fill="#ffffff" stroke="#0f172a" stroke-width="2.6"/>
+        <path d="M8 21C8 17.134 11.134 14 15 14H43C46.866 14 50 17.134 50 21V25H8V21Z" fill="#ef4444" stroke="#0f172a" stroke-width="2.6"/>
+        <line x1="18" y1="9" x2="18" y2="18" stroke="#0f172a" stroke-width="3" stroke-linecap="round"/>
+        <line x1="40" y1="9" x2="40" y2="18" stroke="#0f172a" stroke-width="3" stroke-linecap="round"/>
+        <text x="23" y="42" text-anchor="middle" font-family="sans-serif" font-weight="900" font-size="14" fill="#0f172a">CII</text>
+        <path d="M40 36V32C40 28.686 42.686 26 46 26C49.314 26 52 28.686 52 32V36" stroke="#0f172a" stroke-width="2.8"/>
+        <rect x="36" y="35" width="20" height="19" rx="4" fill="#fbbf24" stroke="#0f172a" stroke-width="2.6"/>
+        <circle cx="46" cy="43" r="2.2" fill="#0f172a"/>
+        <path d="M46 45V49" stroke="#0f172a" stroke-width="2.4" stroke-linecap="round"/>
+      </svg>`,
+
+      refill: `<svg viewBox="0 0 64 64" fill="none" aria-hidden="true">
+        <rect x="19" y="10" width="26" height="8" rx="3" fill="#ffffff" stroke="#0f172a" stroke-width="2.6"/>
+        <rect x="15" y="18" width="34" height="36" rx="6" fill="#f59e0b" stroke="#0f172a" stroke-width="2.6"/>
+        <rect x="20" y="25" width="24" height="20" rx="3" fill="#ffffff" stroke="#0f172a" stroke-width="2.2"/>
+        <text x="32" y="39" text-anchor="middle" font-family="sans-serif" font-weight="900" font-size="12" fill="#0f172a">Rx</text>
+        <path d="M54 34C54 44.5 45.5 53 35 53" stroke="#10b981" stroke-width="4" stroke-linecap="round"/>
+        <path d="M51 37L54.5 31L58 37" stroke="#0f172a" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"/>
+        <path d="M10 30C10 19.5 18.5 11 29 11" stroke="#10b981" stroke-width="4" stroke-linecap="round"/>
+        <path d="M13 27L9.5 33L6 27" stroke="#0f172a" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"/>
+      </svg>`,
+
+      priceadj: `<svg viewBox="0 0 64 64" fill="none" aria-hidden="true">
+        <path d="M12 12H33L52 31L31 52L12 33V12Z" fill="#34d399" stroke="#0f172a" stroke-width="2.6" stroke-linejoin="round"/>
+        <circle cx="21" cy="21" r="3.5" fill="#ffffff" stroke="#0f172a" stroke-width="2.2"/>
+        <circle cx="44" cy="44" r="13" fill="#fde047" stroke="#0f172a" stroke-width="2.6"/>
+        <text x="44" y="49" text-anchor="middle" font-family="sans-serif" font-weight="900" font-size="16" fill="#0f172a">$</text>
+      </svg>`,
+
+      estradiol: `<svg viewBox="0 0 64 64" fill="none" aria-hidden="true">
+        <path d="M14 48L24 54L50 22L40 14L14 48Z" fill="#f472b6" stroke="#0f172a" stroke-width="2.6" stroke-linejoin="round"/>
+        <path d="M38 16L48 24L53 17L43 9L38 16Z" fill="#ffffff" stroke="#0f172a" stroke-width="2.6" stroke-linejoin="round"/>
+        <path d="M14 48L10 55L17 51" fill="#e2e8f0" stroke="#0f172a" stroke-width="2.4" stroke-linejoin="round"/>
+        <path d="M23 36L31 42" stroke="#ffffff" stroke-width="3" stroke-linecap="round"/>
+        <circle cx="48" cy="46" r="10" fill="#ffffff" stroke="#0f172a" stroke-width="2.5"/>
+        <text x="48" y="50" text-anchor="middle" font-family="sans-serif" font-weight="900" font-size="10" fill="#db2777">g</text>
+      </svg>`,
+
+      basicMath: `<svg viewBox="0 0 64 64" fill="none" aria-hidden="true">
+        <rect x="12" y="7" width="40" height="50" rx="8" fill="#ffffff" stroke="#0f172a" stroke-width="2.6"/>
+        <rect x="17" y="13" width="30" height="12" rx="3" fill="#bae6fd" stroke="#0f172a" stroke-width="2.2"/>
+        <rect x="17" y="30" width="12" height="10" rx="3" fill="#fde047" stroke="#0f172a" stroke-width="2"/>
+        <rect x="35" y="30" width="12" height="10" rx="3" fill="#fb7185" stroke="#0f172a" stroke-width="2"/>
+        <rect x="17" y="43" width="12" height="10" rx="3" fill="#34d399" stroke="#0f172a" stroke-width="2"/>
+        <rect x="35" y="43" width="12" height="10" rx="3" fill="#38bdf8" stroke="#0f172a" stroke-width="2"/>
+        <text x="23" y="38.5" text-anchor="middle" font-family="sans-serif" font-weight="900" font-size="11" fill="#0f172a">+</text>
+        <text x="41" y="38.5" text-anchor="middle" font-family="sans-serif" font-weight="900" font-size="12" fill="#0f172a">−</text>
+        <text x="23" y="51.5" text-anchor="middle" font-family="sans-serif" font-weight="900" font-size="11" fill="#0f172a">×</text>
+        <text x="41" y="51.5" text-anchor="middle" font-family="sans-serif" font-weight="900" font-size="11" fill="#0f172a">=</text>
+      </svg>`
+    };
+
+    const TOOLS = [
+      { id: 'ratio',      num: 1, title: 'Cross Multiply Solver',   desc: 'Solve proportions (A/B = C/D) or verify ratios instantly.',    bg: 'bg-cyan' },
+      { id: 'mtaper',     num: 2, title: 'Med Taper Calculator',    desc: 'Dispense qty from target days or day supply from qty.',        bg: 'bg-orange' },
+      { id: 'prednisone', num: 3, title: 'Prednisone Taper',        desc: 'Verify taper totals against Rx quantity with quick presets.',  bg: 'bg-amber' },
+      { id: 'control',    num: 4, title: 'Control Substance Dates', desc: 'Single fill, multi-fill tracker, and dose-change supply.',     bg: 'bg-rose' },
+      { id: 'refill',     num: 5, title: 'Refill Calculator',       desc: 'Calculate remaining full refills and final partial qty.',      bg: 'bg-green' },
+      { id: 'priceadj',   num: 6, title: 'Med Cost Adjuster',       desc: 'Exact integer-cent copay & price adjustments with Undo.',      bg: 'bg-emerald' },
+      { id: 'estradiol',  num: 7, title: 'Estradiol Supply',        desc: 'Daily, weekly, loading, and variable tube day supply.',        bg: 'bg-pink' },
+      { id: 'basicMath',  num: 8, title: 'Basic Math',              desc: 'History-tape calculator with PEMDAS or Left-to-Right mode.',   bg: 'bg-indigo' }
+    ];
+
+    /* =========================================================================
+       APP STATE, NAVIGATION, THEME & CLIPBOARD
+       ========================================================================= */
+    let activeTool = null;
+    let lastSummaryText = '';
+    let fontScale = parseFloat(safeGetStorage('rx_font_scale', '1'));
+    if (!Number.isFinite(fontScale)) fontScale = 1;
+
+    function applyFontScale() {
+      fontScale = Math.max(0.8, Math.min(1.35, roundFix(fontScale, 2)));
+      document.documentElement.style.setProperty('--font-scale', fontScale);
+      safeSetStorage('rx_font_scale', fontScale);
+    }
+
+    function adjustFont(delta) {
+      vibrate();
+      fontScale += delta;
+      applyFontScale();
+    }
+
+    function applyTheme(theme) {
+      const safeTheme = theme === 'light' ? 'light' : 'dark';
+      document.documentElement.setAttribute('data-theme', safeTheme);
+      document.getElementById('btn-theme').textContent = safeTheme === 'dark' ? '☀️' : '🌙';
+      safeSetStorage('rx_theme', safeTheme);
+    }
+
+    function toggleTheme() {
+      vibrate();
+      const cur = document.documentElement.getAttribute('data-theme');
+      applyTheme(cur === 'dark' ? 'light' : 'dark');
+    }
+
+    function renderMenu() {
+      const grid = document.getElementById('menu-grid');
+      grid.innerHTML = TOOLS.map(t => `
+        <button class="tool-card" onclick="navigate('${t.id}')">
+          <div class="tool-card-top">
+            <div class="clipart-badge ${t.bg}">${ICONS[t.id]}</div>
+            <span class="shortcut-pill">${t.num}</span>
+          </div>
+          <div>
+            <h3>${t.title}</h3>
+            <p>${t.desc}</p>
+          </div>
+        </button>
+      `).join('');
+    }
+
+    function navigate(id) {
+      vibrate();
+      const menuView = document.getElementById('view-menu');
+      const calcView = document.getElementById('view-calc');
+      const btnHome = document.getElementById('btn-home');
+
+      if (id === 'menu') {
+        activeTool = null;
+        menuView.classList.add('active');
+        calcView.classList.remove('active');
+        btnHome.style.display = 'none';
+        window.scrollTo({ top: 0, behavior: 'smooth' });
+        return;
+      }
+
+      const tool = TOOLS.find(t => t.id === id);
+      if (!tool) return;
+      activeTool = id;
+      menuView.classList.remove('active');
+      calcView.classList.add('active');
+      btnHome.style.display = 'inline-flex';
+
+      const iconBox = document.getElementById('calc-header-icon');
+      iconBox.className = `calc-header-icon ${tool.bg}`;
+      iconBox.innerHTML = ICONS[id];
+      document.getElementById('calc-header-title').textContent = tool.title;
+      document.getElementById('calc-header-desc').textContent = tool.desc;
+      document.getElementById('btn-copy-summary').style.display = id === 'basicMath' ? 'none' : 'inline-flex';
+
+      BUILDERS[id].render();
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+    }
+
+    function resetCurrentCalc() {
+      vibrate();
+      if (activeTool && BUILDERS[activeTool]) {
+        BUILDERS[activeTool].reset();
+        showToast('Calculator reset');
+      }
+    }
+
+    /** iFrame-safe clipboard copy using document.execCommand('copy') */
+    function copyCurrentSummary() {
+      vibrate();
+      if (!lastSummaryText) {
+        showToast('Enter values to generate a summary');
+        return;
+      }
+      const ta = document.createElement('textarea');
+      ta.value = lastSummaryText;
+      ta.setAttribute('readonly', '');
+      ta.style.position = 'fixed';
+      ta.style.left = '-9999px';
+      ta.style.opacity = '0';
+      document.body.appendChild(ta);
+      ta.select();
+      try {
+        const ok = document.execCommand('copy');
+        showToast(ok ? 'Summary copied to clipboard' : 'Unable to copy automatically');
+      } catch (err) {
+        showToast('Copy unavailable in this browser');
+      } finally {
+        document.body.removeChild(ta);
+      }
+    }
+
+    /* =========================================================================
+       1. CROSS MULTIPLY SOLVER (A / B = C / D)
+       ========================================================================= */
+    const RatioCalc = {
+      state: { a: '', b: '', c: '', d: '' },
+      reset() {
+        this.state = { a: '', b: '', c: '', d: '' };
+        this.render();
+      },
+      render() {
+        document.getElementById('calc-body').innerHTML = `
+          <div class="workspace">
+            <div class="panel">
+              <div class="panel-title"><span>Proportion Setup</span><span>Leave 1 blank for X</span></div>
+              <div class="proportion-box">
+                <div class="fraction-col">
+                  <input id="r-a" class="fraction-input" type="text" inputmode="decimal" placeholder="A" aria-label="Numerator A" value="${escapeHtml(this.state.a)}" oninput="RatioCalc.update('a', this.value)">
+                  <div class="fraction-bar"></div>
+                  <input id="r-b" class="fraction-input" type="text" inputmode="decimal" placeholder="B" aria-label="Denominator B" value="${escapeHtml(this.state.b)}" oninput="RatioCalc.update('b', this.value)">
+                </div>
+                <div class="fraction-eq">=</div>
+                <div class="fraction-col">
+                  <input id="r-c" class="fraction-input" type="text" inputmode="decimal" placeholder="C" aria-label="Numerator C" value="${escapeHtml(this.state.c)}" oninput="RatioCalc.update('c', this.value)">
+                  <div class="fraction-bar"></div>
+                  <input id="r-d" class="fraction-input" type="text" inputmode="decimal" placeholder="D" aria-label="Denominator D" value="${escapeHtml(this.state.d)}" oninput="RatioCalc.update('d', this.value)">
+                </div>
+              </div>
+              <p style="font-size:0.82rem;color:var(--text-secondary);text-align:center;margin-top:0.5rem;">
+                Enter 3 values to solve for the blank, or all 4 to verify equality.
+              </p>
+            </div>
+            <div class="panel" id="ratio-result"></div>
+          </div>`;
+        this.compute();
+      },
+      update(k, v) {
+        this.state[k] = v;
+        this.compute();
+      },
+      compute() {
+        const out = document.getElementById('ratio-result');
+        const keys = ['a', 'b', 'c', 'd'];
+        const vals = {};
+        const blanks = [];
+        let invalid = false;
+
+        keys.forEach(k => {
+          const raw = String(this.state[k]).trim();
+          if (raw === '') {
+            blanks.push(k);
+            vals[k] = null;
+          } else {
+            const n = parseStrictFloat(raw);
+            if (isNaN(n)) invalid = true;
+            vals[k] = n;
+          }
+        });
+
+        if (invalid) {
+          lastSummaryText = '';
+          out.innerHTML = `<div class="panel-title">Result</div><div class="alert-note err">Please enter valid numbers only (no stray decimals or text).</div>`;
+          return;
+        }
+
+        if (blanks.length > 1) {
+          lastSummaryText = '';
+          out.innerHTML = `
+            <div class="panel-title">Result</div>
+            <div class="result-hero">
+              <div class="result-label">Waiting for inputs</div>
+              <div class="result-value">—</div>
+              <div class="result-sub">Fill at least 3 of the 4 fields.</div>
+            </div>`;
+          return;
+        }
+
+        if (blanks.length === 1) {
+          const unk = blanks[0];
+          let x, step1, step2, divZero = false;
+
+          if (unk === 'a') {
+            if (vals.d === 0) divZero = true;
+            else {
+              x = (vals.b * vals.c) / vals.d;
+              step1 = `A × ${fmtNum(vals.d, 4)} = ${fmtNum(vals.b, 4)} × ${fmtNum(vals.c, 4)}`;
+              step2 = `A = (${fmtNum(vals.b, 4)} × ${fmtNum(vals.c, 4)}) ÷ ${fmtNum(vals.d, 4)}`;
+            }
+          } else if (unk === 'b') {
+            if (vals.c === 0) divZero = true;
+            else {
+              x = (vals.a * vals.d) / vals.c;
+              step1 = `${fmtNum(vals.a, 4)} × ${fmtNum(vals.d, 4)} = B × ${fmtNum(vals.c, 4)}`;
+              step2 = `B = (${fmtNum(vals.a, 4)} × ${fmtNum(vals.d, 4)}) ÷ ${fmtNum(vals.c, 4)}`;
+            }
+          } else if (unk === 'c') {
+            if (vals.b === 0) divZero = true;
+            else {
+              x = (vals.a * vals.d) / vals.b;
+              step1 = `${fmtNum(vals.a, 4)} × ${fmtNum(vals.d, 4)} = ${fmtNum(vals.b, 4)} × C`;
+              step2 = `C = (${fmtNum(vals.a, 4)} × ${fmtNum(vals.d, 4)}) ÷ ${fmtNum(vals.b, 4)}`;
+            }
+          } else {
+            if (vals.a === 0) divZero = true;
+            else {
+              x = (vals.b * vals.c) / vals.a;
+              step1 = `${fmtNum(vals.a, 4)} × D = ${fmtNum(vals.b, 4)} × ${fmtNum(vals.c, 4)}`;
+              step2 = `D = (${fmtNum(vals.b, 4)} × ${fmtNum(vals.c, 4)}) ÷ ${fmtNum(vals.a, 4)}`;
+            }
+          }
+
+          if (divZero) {
+            lastSummaryText = '';
+            out.innerHTML = `<div class="panel-title">Result</div><div class="alert-note err">Division by zero is undefined. Adjust the denominator/opposite term.</div>`;
+            return;
+          }
+
+          const cleanX = fmtNum(x, 4);
+          lastSummaryText = `Cross Multiply Solver\n${step1}\n${step2}\nResult: ${unk.toUpperCase()} = ${cleanX}`;
+          out.innerHTML = `
+            <div class="panel-title">Solution</div>
+            <div class="result-hero success">
+              <div class="result-label">Solved for ${unk.toUpperCase()}</div>
+              <div class="result-value">${unk.toUpperCase()} = ${cleanX}</div>
+              <div class="result-sub">Rounded to 2 decimals: ${fmtNum(x, 2)}</div>
+            </div>
+            <div class="breakdown">
+              <div class="breakdown-line"><span>Cross-Multiply</span><strong>${step1}</strong></div>
+              <div class="breakdown-line"><span>Isolate ${unk.toUpperCase()}</span><strong>${step2}</strong></div>
+              <div class="breakdown-line"><span>Exact Value</span><strong>${fmtNum(x, 6)}</strong></div>
+            </div>`;
+          return;
+        }
+
+        // All 4 values filled -> Verify proportion equality
+        if (vals.b === 0 || vals.d === 0) {
+          lastSummaryText = '';
+          out.innerHTML = `<div class="panel-title">Verification</div><div class="alert-note err">Invalid proportion: denominator B or D cannot be 0.</div>`;
+          return;
+        }
+        const left = vals.a / vals.b;
+        const right = vals.c / vals.d;
+        const ad = vals.a * vals.d;
+        const bc = vals.b * vals.c;
+        const isEqual = Math.abs(ad - bc) <= 1e-9 * Math.max(1, Math.abs(ad), Math.abs(bc));
+
+        lastSummaryText = `Proportion Verification\n${vals.a}/${vals.b} = ${vals.c}/${vals.d}\nStatus: ${isEqual ? 'TRUE' : 'FALSE'}\nLeft = ${fmtNum(left, 4)}, Right = ${fmtNum(right, 4)}`;
+        out.innerHTML = `
+          <div class="panel-title">Verification</div>
+          <div class="result-hero ${isEqual ? 'success' : 'warning'}">
+            <div class="result-label">Proportion Check</div>
+            <div class="result-value">${isEqual ? 'TRUE (Equal)' : 'FALSE (Not Equal)'}</div>
+            <div class="result-sub">${fmtNum(left, 4)} ${isEqual ? '=' : '≠'} ${fmtNum(right, 4)}</div>
+          </div>
+          <div class="breakdown">
+            <div class="breakdown-line"><span>A ÷ B</span><strong>${fmtNum(left, 6)}</strong></div>
+            <div class="breakdown-line"><span>C ÷ D</span><strong>${fmtNum(right, 6)}</strong></div>
+            <div class="breakdown-line"><span>Cross Products (A×D vs B×C)</span><strong>${fmtNum(ad, 4)} vs ${fmtNum(bc, 4)}</strong></div>
+          </div>`;
+      }
+    };
+
+    /* =========================================================================
+       2. MED TAPER CALCULATOR (Mode 1: Qty from Days | Mode 2: Days from Qty)
+       ========================================================================= */
+    const MTaperCalc = {
+      state: {
+        mode: 1,
+        targetDays: '30',
+        totalQty: '60',
+        lines: [
+          { dose: '3', days: '7', isRest: false },
+          { dose: '2', days: '7', isRest: false },
+          { dose: '1', days: '',  isRest: true }
+        ]
+      },
+      reset() {
+        this.state = {
+          mode: this.state.mode,
+          targetDays: '',
+          totalQty: '',
+          lines: [{ dose: '', days: '', isRest: false }]
+        };
+        this.render();
+      },
+      setMode(m) {
+        vibrate();
+        this.state.mode = m;
+        this.render();
+      },
+      addLine() {
+        vibrate();
+        this.state.lines.push({ dose: '', days: '', isRest: false });
+        this.render();
+      },
+      removeLine(idx) {
+        vibrate();
+        this.state.lines.splice(idx, 1);
+        if (this.state.lines.length === 0) {
+          this.state.lines.push({ dose: '', days: '', isRest: false });
+        }
+        this.render();
+      },
+      updateLine(idx, field, value) {
+        if (field === 'isRest') {
+          this.state.lines[idx].isRest = value;
+          if (value) this.state.lines[idx].days = '';
+          this.render();
+          return;
+        }
+        this.state.lines[idx][field] = value;
+        this.compute();
+      },
+      render() {
+        const m = this.state.mode;
+        const rowsHtml = this.state.lines.map((ln, i) => `
+          <div class="step-row has-rest">
+            <span class="step-num">Step ${i + 1}</span>
+            <input type="text" inputmode="decimal" placeholder="Units / day" value="${escapeHtml(ln.dose)}"
+              oninput="MTaperCalc.updateLine(${i}, 'dose', this.value)">
+            <input type="text" inputmode="decimal" placeholder="${ln.isRest ? 'Remainder' : 'Days'}"
+              value="${escapeHtml(ln.days)}" ${ln.isRest ? 'disabled' : ''}
+              oninput="MTaperCalc.updateLine(${i}, 'days', this.value)">
+            <label class="check-label" title="Use this dose for remaining days/quantity">
+              <input type="checkbox" ${ln.isRest ? 'checked' : ''} onchange="MTaperCalc.updateLine(${i}, 'isRest', this.checked)">
+              Rest
+            </label>
+            <button class="btn btn-sm btn-danger" onclick="MTaperCalc.removeLine(${i})" title="Remove step">✕</button>
+          </div>`).join('');
+
+        document.getElementById('calc-body').innerHTML = `
+          <div class="workspace">
+            <div class="panel">
+              <div class="tabs">
+                <button class="tab-btn ${m === 1 ? 'active' : ''}" onclick="MTaperCalc.setMode(1)">Mode 1: Qty from Days</button>
+                <button class="tab-btn ${m === 2 ? 'active' : ''}" onclick="MTaperCalc.setMode(2)">Mode 2: Days from Qty</button>
+              </div>
+
+              ${m === 1 ? `
+                <div class="field">
+                  <label>Target Days Supply</label>
+                  <input type="text" inputmode="decimal" placeholder="e.g. 30" value="${escapeHtml(this.state.targetDays)}"
+                    oninput="MTaperCalc.state.targetDays=this.value; MTaperCalc.compute();">
+                </div>
+              ` : `
+                <div class="field">
+                  <label>Total Quantity (Caps / Tabs)</label>
+                  <input type="text" inputmode="decimal" placeholder="e.g. 60" value="${escapeHtml(this.state.totalQty)}"
+                    oninput="MTaperCalc.state.totalQty=this.value; MTaperCalc.compute();">
+                </div>
+              `}
+
+              <div class="panel-title" style="margin-top:0.5rem;">
+                <span>Taper Schedule</span>
+                <button class="btn btn-sm btn-primary" onclick="MTaperCalc.addLine()">+ Add Step</button>
+              </div>
+
+              <div class="step-list">${rowsHtml}</div>
+            </div>
+            <div class="panel" id="mtaper-result"></div>
+          </div>`;
+        this.compute();
+      },
+      compute() {
+        const out = document.getElementById('mtaper-result');
+        const m = this.state.mode;
+        const parsedLines = [];
+
+        for (let i = 0; i < this.state.lines.length; i++) {
+          const ln = this.state.lines[i];
+          if (ln.dose.trim() === '' && ln.days.trim() === '' && !ln.isRest) continue;
+          const dose = parseStrictFloat(ln.dose);
+          if (isNaN(dose) || dose < 0) {
+            lastSummaryText = '';
+            out.innerHTML = `<div class="panel-title">Result</div><div class="alert-note err">Step ${i + 1}: Enter a valid dose (0 or greater).</div>`;
+            return;
+          }
+          if (!ln.isRest) {
+            const days = parseStrictFloat(ln.days);
+            if (isNaN(days) || days <= 0) {
+              lastSummaryText = '';
+              out.innerHTML = `<div class="panel-title">Result</div><div class="alert-note err">Step ${i + 1}: Enter Days > 0 or check "Rest".</div>`;
+              return;
+            }
+            parsedLines.push({ idx: i + 1, dose, days, isRest: false });
+          } else {
+            parsedLines.push({ idx: i + 1, dose, days: null, isRest: true });
+          }
+        }
+
+        if (parsedLines.length === 0) {
+          lastSummaryText = '';
+          out.innerHTML = `
+            <div class="panel-title">Result</div>
+            <div class="result-hero">
+              <div class="result-label">Waiting</div>
+              <div class="result-value">—</div>
+              <div class="result-sub">Add at least one dosing step.</div>
+            </div>`;
+          return;
+        }
+
+        if (m === 1) {
+          const td = parseStrictFloat(this.state.targetDays);
+          if (isNaN(td) || td <= 0) {
+            lastSummaryText = '';
+            out.innerHTML = `<div class="panel-title">Result</div><div class="alert-note err">Enter a positive Target Days value.</div>`;
+            return;
+          }
+
+          let totalQty = 0;
+          let daysUsed = 0;
+          const logs = [];
+          let stopped = false;
+
+          for (const ln of parsedLines) {
+            if (stopped) {
+              logs.push({ label: `Step ${ln.idx} (${fmtNum(ln.dose, 2)}/day)`, val: 'Skipped (target reached)' });
+              continue;
+            }
+            if (ln.isRest) {
+              const rem = roundFix(td - daysUsed);
+              if (rem > 1e-9) {
+                const sub = roundFix(ln.dose * rem);
+                totalQty = roundFix(totalQty + sub);
+                daysUsed = roundFix(daysUsed + rem);
+                logs.push({ label: `Step ${ln.idx}: ${fmtNum(ln.dose, 2)}/d × ${fmtNum(rem, 1)}d (rest)`, val: `${fmtNum(sub, 2)} units` });
+              } else {
+                logs.push({ label: `Step ${ln.idx} (rest)`, val: 'Skipped (0 days left)' });
+              }
+              stopped = true;
+            } else {
+              if (roundFix(daysUsed + ln.days) <= td + 1e-9) {
+                const sub = roundFix(ln.dose * ln.days);
+                totalQty = roundFix(totalQty + sub);
+                daysUsed = roundFix(daysUsed + ln.days);
+                logs.push({ label: `Step ${ln.idx}: ${fmtNum(ln.dose, 2)}/d × ${fmtNum(ln.days, 1)}d`, val: `${fmtNum(sub, 2)} units` });
+              } else {
+                const rem = roundFix(td - daysUsed);
+                if (rem > 1e-9) {
+                  const sub = roundFix(ln.dose * rem);
+                  totalQty = roundFix(totalQty + sub);
+                  daysUsed = roundFix(daysUsed + rem);
+                  logs.push({ label: `Step ${ln.idx}: ${fmtNum(ln.dose, 2)}/d × ${fmtNum(rem, 1)}d (capped)`, val: `${fmtNum(sub, 2)} units` });
+                }
+                stopped = true;
+              }
+            }
+          }
+
+          // Round UP whole-unit dispense quantity with epsilon guard
+          const dispenseWhole = Math.ceil(totalQty - 1e-9);
+          const shortDays = roundFix(td - daysUsed);
+          const needsRoundUp = Math.abs(dispenseWhole - totalQty) > 1e-6;
+
+          lastSummaryText = `Med Taper (Qty from Days)\nTarget: ${fmtNum(td, 1)} days\nExact Needed: ${fmtNum(totalQty, 2)} units\nDispense (Whole): ${dispenseWhole} units\nDays Covered: ${fmtNum(daysUsed, 1)} days\n` +
+            logs.map(l => `- ${l.label}: ${l.val}`).join('\n');
+
+          out.innerHTML = `
+            <div class="panel-title">Result</div>
+            <div class="result-hero success">
+              <div class="result-label">Dispense Quantity (Whole Units)</div>
+              <div class="result-value">${dispenseWhole} units</div>
+              <div class="result-sub">${needsRoundUp ? `Exact calculated: ${fmtNum(totalQty, 2)} units (rounded up)` : `Exact quantity: ${fmtNum(totalQty, 2)} units`}</div>
+            </div>
+            ${shortDays > 1e-6 ? `<div class="alert-note warn">Schedule is ${fmtNum(shortDays, 1)} day(s) short of your ${fmtNum(td, 1)}-day target.</div>` : ''}
+            <div class="stat-grid">
+              <div class="stat-box"><div class="k">Target Days</div><div class="v">${fmtNum(td, 1)}</div></div>
+              <div class="stat-box"><div class="k">Days Covered</div><div class="v">${fmtNum(daysUsed, 1)}</div></div>
+            </div>
+            <div class="breakdown">
+              ${logs.map(l => `<div class="breakdown-line"><span>${l.label}</span><strong>${l.val}</strong></div>`).join('')}
+            </div>`;
+        } else {
+          // Mode 2: Days from Qty
+          const tq = parseStrictFloat(this.state.totalQty);
+          if (isNaN(tq) || tq <= 0) {
+            lastSummaryText = '';
+            out.innerHTML = `<div class="panel-title">Result</div><div class="alert-note err">Enter a positive Total Quantity.</div>`;
+            return;
+          }
+
+          let qtyUsed = 0;
+          let daysUsed = 0;
+          const logs = [];
+          let stopped = false;
+
+          for (const ln of parsedLines) {
+            if (stopped) {
+              logs.push({ label: `Step ${ln.idx}`, val: 'Skipped (qty exhausted)' });
+              continue;
+            }
+            const remQty = roundFix(tq - qtyUsed);
+            if (ln.dose === 0) {
+              if (!ln.isRest) {
+                daysUsed = roundFix(daysUsed + ln.days);
+                logs.push({ label: `Step ${ln.idx}: 0/d × ${fmtNum(ln.days, 1)}d (off/placebo)`, val: '0 units' });
+              } else {
+                logs.push({ label: `Step ${ln.idx}: 0/d (rest)`, val: 'Dose stopped' });
+                stopped = true;
+              }
+              continue;
+            }
+            if (remQty <= 1e-9) {
+              logs.push({ label: `Step ${ln.idx}`, val: 'Skipped (0 units left)' });
+              stopped = true;
+              continue;
+            }
+            if (ln.isRest) {
+              const d = remQty / ln.dose;
+              daysUsed = roundFix(daysUsed + d);
+              qtyUsed = tq;
+              logs.push({ label: `Step ${ln.idx}: ${fmtNum(ln.dose, 2)}/d (rest)`, val: `${fmtNum(d, 1)} days (${fmtNum(remQty, 2)} u)` });
+              stopped = true;
+            } else {
+              const need = roundFix(ln.dose * ln.days);
+              if (need <= remQty + 1e-9) {
+                qtyUsed = roundFix(qtyUsed + need);
+                daysUsed = roundFix(daysUsed + ln.days);
+                logs.push({ label: `Step ${ln.idx}: ${fmtNum(ln.dose, 2)}/d × ${fmtNum(ln.days, 1)}d`, val: `${fmtNum(need, 2)} units` });
+              } else {
+                const d = remQty / ln.dose;
+                qtyUsed = tq;
+                daysUsed = roundFix(daysUsed + d);
+                logs.push({ label: `Step ${ln.idx}: ${fmtNum(ln.dose, 2)}/d × ${fmtNum(d, 1)}d (runs out)`, val: `${fmtNum(remQty, 2)} units` });
+                stopped = true;
+              }
+            }
+          }
+
+          const leftover = roundFix(tq - qtyUsed);
+          lastSummaryText = `Med Taper (Days from Qty)\nInput Qty: ${fmtNum(tq, 2)} units\nDay Supply: ${fmtNum(daysUsed, 1)} days (Whole: ${Math.floor(daysUsed + 1e-9)}d)\nUnits Used: ${fmtNum(qtyUsed, 2)}\n` +
+            (leftover > 1e-6 ? `Remaining Unused: ${fmtNum(leftover, 2)} units\n` : '') +
+            logs.map(l => `- ${l.label}: ${l.val}`).join('\n');
+
+          out.innerHTML = `
+            <div class="panel-title">Result</div>
+            <div class="result-hero success">
+              <div class="result-label">Calculated Day Supply</div>
+              <div class="result-value">${fmtNum(daysUsed, 1)} days</div>
+              <div class="result-sub">Whole days: ${Math.floor(daysUsed + 1e-9)} days</div>
+            </div>
+            ${leftover > 1e-6 ? `<div class="alert-note warn">${fmtNum(leftover, 2)} unit(s) remain unused after scheduled steps.</div>` : ''}
+            <div class="stat-grid">
+              <div class="stat-box"><div class="k">Input Qty</div><div class="v">${fmtNum(tq, 2)}</div></div>
+              <div class="stat-box"><div class="k">Units Used</div><div class="v">${fmtNum(qtyUsed, 2)}</div></div>
+            </div>
+            <div class="breakdown">
+              ${logs.map(l => `<div class="breakdown-line"><span>${l.label}</span><strong>${l.val}</strong></div>`).join('')}
+            </div>`;
+        }
+      }
+    };
+
+    /* =========================================================================
+       3. PREDNISONE TAPER CALCULATOR
+       ========================================================================= */
+    const PrednisoneCalc = {
+      state: {
+        rxQty: '30',
+        lines: [
+          { tabs: '4', days: '3' },
+          { tabs: '3', days: '3' },
+          { tabs: '2', days: '3' },
+          { tabs: '1', days: '3' }
+        ]
+      },
+      reset() {
+        this.state = { rxQty: '', lines: [{ tabs: '', days: '' }] };
+        this.render();
+      },
+      applyPreset(type) {
+        vibrate();
+        if (type === '4321x3') {
+          this.state.lines = [
+            { tabs: '4', days: '3' }, { tabs: '3', days: '3' },
+            { tabs: '2', days: '3' }, { tabs: '1', days: '3' }
+          ];
+          this.state.rxQty = '30';
+        } else if (type === '321x4') {
+          this.state.lines = [
+            { tabs: '3', days: '4' }, { tabs: '2', days: '4' }, { tabs: '1', days: '4' }
+          ];
+          this.state.rxQty = '24';
+        } else if (type === '654321') {
+          this.state.lines = [
+            { tabs: '6', days: '1' }, { tabs: '5', days: '1' }, { tabs: '4', days: '1' },
+            { tabs: '3', days: '1' }, { tabs: '2', days: '1' }, { tabs: '1', days: '1' }
+          ];
+          this.state.rxQty = '21';
+        }
+        this.render();
+      },
+      addLine() {
+        vibrate();
+        this.state.lines.push({ tabs: '', days: '' });
+        this.render();
+      },
+      removeLine(i) {
+        vibrate();
+        this.state.lines.splice(i, 1);
+        if (!this.state.lines.length) this.state.lines.push({ tabs: '', days: '' });
+        this.render();
+      },
+      render() {
+        const rows = this.state.lines.map((ln, i) => `
+          <div class="step-row">
+            <span class="step-num">Step ${i + 1}</span>
+            <input type="text" inputmode="decimal" placeholder="Tabs / day" value="${escapeHtml(ln.tabs)}"
+              oninput="PrednisoneCalc.state.lines[${i}].tabs=this.value; PrednisoneCalc.compute();">
+            <input type="text" inputmode="decimal" placeholder="Days" value="${escapeHtml(ln.days)}"
+              oninput="PrednisoneCalc.state.lines[${i}].days=this.value; PrednisoneCalc.compute();">
+            <button class="btn btn-sm btn-danger" onclick="PrednisoneCalc.removeLine(${i})" title="Remove line">✕</button>
+          </div>`).join('');
+
+        document.getElementById('calc-body').innerHTML = `
+          <div class="workspace">
+            <div class="panel">
+              <div class="field">
+                <label>Prescribed Rx Quantity (optional — leave blank to calculate)</label>
+                <input type="text" inputmode="decimal" placeholder="e.g. 30" value="${escapeHtml(this.state.rxQty)}"
+                  oninput="PrednisoneCalc.state.rxQty=this.value; PrednisoneCalc.compute();">
+              </div>
+              <div class="pill-row" style="margin-bottom:1rem;">
+                <button class="pill" onclick="PrednisoneCalc.applyPreset('4321x3')">4-3-2-1 × 3d (30)</button>
+                <button class="pill" onclick="PrednisoneCalc.applyPreset('321x4')">3-2-1 × 4d (24)</button>
+                <button class="pill" onclick="PrednisoneCalc.applyPreset('654321')">6-5-4-3-2-1 × 1d (21)</button>
+              </div>
+              <div class="panel-title">
+                <span>Dosing Schedule</span>
+                <button class="btn btn-sm btn-primary" onclick="PrednisoneCalc.addLine()">+ Add Line</button>
+              </div>
+              <div class="step-list">${rows}</div>
+            </div>
+            <div class="panel" id="pred-result"></div>
+          </div>`;
+        this.compute();
+      },
+      compute() {
+        const out = document.getElementById('pred-result');
+        const rxRaw = this.state.rxQty.trim();
+        let rxQty = null;
+
+        if (rxRaw !== '') {
+          rxQty = parseStrictFloat(rxRaw);
+          if (isNaN(rxQty) || rxQty <= 0) {
+            lastSummaryText = '';
+            out.innerHTML = `<div class="panel-title">Verification</div><div class="alert-note err">Prescribed Rx quantity must be a positive number.</div>`;
+            return;
+          }
+        }
+
+        let totalTabs = 0;
+        let totalDays = 0;
+        const logs = [];
+
+        for (let i = 0; i < this.state.lines.length; i++) {
+          const ln = this.state.lines[i];
+          if (ln.tabs.trim() === '' && ln.days.trim() === '') continue;
+          const t = parseStrictFloat(ln.tabs);
+          const d = parseStrictFloat(ln.days);
+          if (isNaN(t) || t < 0 || isNaN(d) || d <= 0) {
+            lastSummaryText = '';
+            out.innerHTML = `<div class="panel-title">Verification</div><div class="alert-note err">Step ${i + 1}: Enter valid Tabs/day (≥ 0) and Days (> 0).</div>`;
+            return;
+          }
+          const sub = roundFix(t * d);
+          totalTabs = roundFix(totalTabs + sub);
+          totalDays = roundFix(totalDays + d);
+          logs.push({ label: `Step ${i + 1}: ${fmtNum(t, 2)} tabs × ${fmtNum(d, 1)} days`, val: `${fmtNum(sub, 2)} tabs` });
+        }
+
+        if (!logs.length) {
+          lastSummaryText = '';
+          out.innerHTML = `
+            <div class="panel-title">Verification</div>
+            <div class="result-hero">
+              <div class="result-label">Waiting</div>
+              <div class="result-value">—</div>
+              <div class="result-sub">Enter dosing lines to calculate total tablets.</div>
+            </div>`;
+          return;
+        }
+
+        let heroClass = '';
+        let statusTitle = 'Calculated Total';
+        let statusMain = `${fmtNum(totalTabs, 2)} tabs`;
+        let statusSub = `Total duration: ${fmtNum(totalDays, 1)} days`;
+
+        if (rxQty !== null) {
+          const diff = roundFix(rxQty - totalTabs, 2);
+          if (Math.abs(diff) < 1e-6) {
+            heroClass = 'success';
+            statusTitle = 'Verification Status';
+            statusMain = '✓ EXACT MATCH';
+            statusSub = `Rx (${fmtNum(rxQty, 2)}) matches taper need (${fmtNum(totalTabs, 2)} tabs)`;
+          } else {
+            heroClass = 'warning';
+            statusTitle = 'Verification Status';
+            statusMain = '⚠ MISMATCH';
+            statusSub = diff > 0
+              ? `Rx has +${fmtNum(diff, 2)} EXTRA tab(s)`
+              : `Rx is SHORT by -${fmtNum(Math.abs(diff), 2)} tab(s)`;
+          }
+        }
+
+        lastSummaryText = `Prednisone Taper\nStatus: ${statusMain}\nTabs Needed: ${fmtNum(totalTabs, 2)}\n` +
+          (rxQty !== null ? `Prescribed Qty: ${fmtNum(rxQty, 2)}\n` : '') +
+          `Total Days: ${fmtNum(totalDays, 1)}\n` +
+          logs.map(l => `- ${l.label} = ${l.val}`).join('\n');
+
+        out.innerHTML = `
+          <div class="panel-title">Verification</div>
+          <div class="result-hero ${heroClass}">
+            <div class="result-label">${statusTitle}</div>
+            <div class="result-value">${statusMain}</div>
+            <div class="result-sub">${statusSub}</div>
+          </div>
+          <div class="stat-grid">
+            <div class="stat-box"><div class="k">Tabs Needed</div><div class="v">${fmtNum(totalTabs, 2)}</div></div>
+            <div class="stat-box"><div class="k">Total Days</div><div class="v">${fmtNum(totalDays, 1)}</div></div>
+          </div>
+          <div class="breakdown">
+            ${logs.map(l => `<div class="breakdown-line"><span>${l.label}</span><strong>${l.val}</strong></div>`).join('')}
+          </div>`;
+      }
+    };
+
+    /* =========================================================================
+       4. CONTROL SUBSTANCE DATES (Preset 1–5d + Live Custom Early-Fill Input)
+       ========================================================================= */
+    const ControlCalc = {
+      PRESET_EARLY_DAYS: [1, 2, 3, 4, 5],
+      state: {
+        mode: 1,
+        earlyDaysInput: '3',
+        // Mode 1: Single Fill
+        m1Date: todayISO(),
+        m1Supply: '30',
+        // Mode 2: Multi-Fill Tracker
+        m2First: '',
+        m2Ref: todayISO(),
+        m2Supply: '30',
+        // Mode 3: Change in Therapy
+        m3OrigDate: '',
+        m3OrigQty: '60',
+        m3OrigDose: '2',
+        m3NewDate: todayISO(),
+        m3NewDose: '3'
+      },
+      reset() {
+        const mode = this.state.mode;
+        this.state = {
+          mode,
+          earlyDaysInput: '3',
+          m1Date: todayISO(), m1Supply: '30',
+          m2First: '', m2Ref: todayISO(), m2Supply: '30',
+          m3OrigDate: '', m3OrigQty: '', m3OrigDose: '', m3NewDate: todayISO(), m3NewDose: ''
+        };
+        this.render();
+      },
+      setMode(m) {
+        vibrate();
+        this.state.mode = m;
+        this.render();
+      },
+      /** Strictly parse non-negative whole number (0..36500); returns null if empty/invalid */
+      parseEarlyDays() {
+        const raw = String(this.state.earlyDaysInput).trim();
+        if (raw === '' || !/^\d+$/.test(raw)) return null;
+        const val = parseInt(raw, 10);
+        if (!Number.isFinite(val) || val < 0 || val > 36500) return null;
+        return val;
+      },
+      /** Sync preset pill active states & invalid border WITHOUT re-rendering the form */
+      syncEarlyControls() {
+        const parsed = this.parseEarlyDays();
+        const pillWrap = document.getElementById('ctrl-early-pills');
+        if (pillWrap) {
+          pillWrap.querySelectorAll('.pill[data-early]').forEach(btn => {
+            const d = parseInt(btn.getAttribute('data-early'), 10);
+            btn.classList.toggle('active', parsed !== null && parsed === d);
+          });
+        }
+        const customInput = document.getElementById('ctrl-custom-early');
+        if (customInput) {
+          customInput.classList.toggle('input-invalid', parsed === null);
+        }
+      },
+      /** Preset pill click: sets value, updates custom input live, and recalculates */
+      setEarly(d) {
+        vibrate();
+        this.state.earlyDaysInput = String(d);
+        const customInput = document.getElementById('ctrl-custom-early');
+        if (customInput) customInput.value = String(d);
+        this.syncEarlyControls();
+        this.compute();
+      },
+      /** Custom input typing: live update without losing focus on multi-digit entry */
+      updateCustomEarly(val) {
+        this.state.earlyDaysInput = val;
+        this.syncEarlyControls();
+        this.compute();
+      },
+      /** Build standardized Early Fill result card across all 3 modes */
+      buildEarlyCardHtml(nextFillDate, earlyDays) {
+        if (earlyDays === null) {
+          return `
+            <div class="result-hero muted">
+              <div class="result-label">Earliest Fill Window</div>
+              <div class="result-value">—</div>
+              <div class="result-sub">Enter a valid whole number (0+) in Custom days or pick a preset.</div>
+            </div>`;
+        }
+        if (earlyDays === 0) {
+          return `
+            <div class="result-hero warning">
+              <div class="result-label">Earliest Fill (0 Days Early — Exact Due Date)</div>
+              <div class="result-value">${fmtDateShort(nextFillDate)}</div>
+              <div class="result-sub">${fmtDateDisplay(nextFillDate)}</div>
+            </div>`;
+        }
+        const earlyDt = addDaysUTC(nextFillDate, -earlyDays);
+        const dayWord = earlyDays === 1 ? 'Day' : 'Days';
+        return `
+          <div class="result-hero warning">
+            <div class="result-label">Earliest Fill (${earlyDays} ${dayWord} Early)</div>
+            <div class="result-value">${fmtDateShort(earlyDt)}</div>
+            <div class="result-sub">${fmtDateDisplay(earlyDt)}</div>
+          </div>`;
+      },
+      /** Build standardized Early Fill line for Copy Summary output */
+      buildEarlySummaryLine(nextFillDate, earlyDays) {
+        if (earlyDays === null) {
+          return 'Earliest Fill: Not set (enter a valid whole number 0+)';
+        }
+        if (earlyDays === 0) {
+          return `Earliest (0 days early — exact due date): ${fmtDateDisplay(nextFillDate)}`;
+        }
+        const earlyDt = addDaysUTC(nextFillDate, -earlyDays);
+        const dayWord = earlyDays === 1 ? 'day' : 'days';
+        return `Earliest (${earlyDays} ${dayWord} early): ${fmtDateDisplay(earlyDt)}`;
+      },
+      render() {
+        const s = this.state;
+        const parsedEarly = this.parseEarlyDays();
+        const earlyPills = this.PRESET_EARLY_DAYS.map(d =>
+          `<button type="button" class="pill ${parsedEarly === d ? 'active' : ''}" data-early="${d}" onclick="ControlCalc.setEarly(${d})">${d}d early</button>`
+        ).join('');
+
+        let formHtml = '';
+        if (s.mode === 1) {
+          formHtml = `
+            <div class="field">
+              <label>Previous Fill Date</label>
+              <div class="input-row">
+                <input type="date" value="${s.m1Date}" onchange="ControlCalc.state.m1Date=this.value; ControlCalc.compute();">
+                <button type="button" class="btn btn-sm" onclick="ControlCalc.state.m1Date=todayISO(); ControlCalc.render();">Today</button>
+              </div>
+            </div>
+            <div class="field">
+              <label>Days Supply</label>
+              <input type="text" inputmode="numeric" placeholder="e.g. 30" value="${escapeHtml(s.m1Supply)}"
+                oninput="ControlCalc.state.m1Supply=this.value; ControlCalc.compute();">
+              <div class="pill-row">
+                <button type="button" class="pill ${s.m1Supply === '7' ? 'active' : ''}" onclick="ControlCalc.state.m1Supply='7'; ControlCalc.render();">7d</button>
+                <button type="button" class="pill ${s.m1Supply === '14' ? 'active' : ''}" onclick="ControlCalc.state.m1Supply='14'; ControlCalc.render();">14d</button>
+                <button type="button" class="pill ${s.m1Supply === '28' ? 'active' : ''}" onclick="ControlCalc.state.m1Supply='28'; ControlCalc.render();">28d</button>
+                <button type="button" class="pill ${s.m1Supply === '30' ? 'active' : ''}" onclick="ControlCalc.state.m1Supply='30'; ControlCalc.render();">30d</button>
+                <button type="button" class="pill ${s.m1Supply === '90' ? 'active' : ''}" onclick="ControlCalc.state.m1Supply='90'; ControlCalc.render();">90d</button>
+              </div>
+            </div>`;
+        } else if (s.mode === 2) {
+          formHtml = `
+            <div class="field-grid">
+              <div class="field">
+                <label>First Fill Date</label>
+                <input type="date" value="${s.m2First}" onchange="ControlCalc.state.m2First=this.value; ControlCalc.compute();">
+              </div>
+              <div class="field">
+                <label>Reference Date (Today)</label>
+                <div class="input-row">
+                  <input type="date" value="${s.m2Ref}" onchange="ControlCalc.state.m2Ref=this.value; ControlCalc.compute();">
+                  <button type="button" class="btn btn-sm" onclick="ControlCalc.state.m2Ref=todayISO(); ControlCalc.render();">Today</button>
+                </div>
+              </div>
+            </div>
+            <div class="field" style="margin-top:0.85rem;">
+              <label>Days Supply per Fill</label>
+              <input type="text" inputmode="numeric" placeholder="e.g. 30" value="${escapeHtml(s.m2Supply)}"
+                oninput="ControlCalc.state.m2Supply=this.value; ControlCalc.compute();">
+              <div class="pill-row">
+                <button type="button" class="pill ${s.m2Supply === '7' ? 'active' : ''}" onclick="ControlCalc.state.m2Supply='7'; ControlCalc.render();">7d</button>
+                <button type="button" class="pill ${s.m2Supply === '14' ? 'active' : ''}" onclick="ControlCalc.state.m2Supply='14'; ControlCalc.render();">14d</button>
+                <button type="button" class="pill ${s.m2Supply === '28' ? 'active' : ''}" onclick="ControlCalc.state.m2Supply='28'; ControlCalc.render();">28d</button>
+                <button type="button" class="pill ${s.m2Supply === '30' ? 'active' : ''}" onclick="ControlCalc.state.m2Supply='30'; ControlCalc.render();">30d</button>
+                <button type="button" class="pill ${s.m2Supply === '90' ? 'active' : ''}" onclick="ControlCalc.state.m2Supply='90'; ControlCalc.render();">90d</button>
+              </div>
+            </div>`;
+        } else {
+          formHtml = `
+            <div class="field-grid">
+              <div class="field">
+                <label>Original Fill Date</label>
+                <input type="date" value="${s.m3OrigDate}" onchange="ControlCalc.state.m3OrigDate=this.value; ControlCalc.compute();">
+              </div>
+              <div class="field">
+                <label>Date of Dose Change</label>
+                <div class="input-row">
+                  <input type="date" value="${s.m3NewDate}" onchange="ControlCalc.state.m3NewDate=this.value; ControlCalc.compute();">
+                  <button type="button" class="btn btn-sm" onclick="ControlCalc.state.m3NewDate=todayISO(); ControlCalc.render();">Today</button>
+                </div>
+              </div>
+              <div class="field">
+                <label>Original Quantity Filled</label>
+                <input type="text" inputmode="decimal" placeholder="e.g. 60" value="${escapeHtml(s.m3OrigQty)}"
+                  oninput="ControlCalc.state.m3OrigQty=this.value; ControlCalc.compute();">
+              </div>
+              <div class="field">
+                <label>Original Dose (units/day)</label>
+                <input type="text" inputmode="decimal" placeholder="e.g. 2" value="${escapeHtml(s.m3OrigDose)}"
+                  oninput="ControlCalc.state.m3OrigDose=this.value; ControlCalc.compute();">
+              </div>
+            </div>
+            <div class="field" style="margin-top:0.85rem;">
+              <label>NEW Dose (units/day)</label>
+              <input type="text" inputmode="decimal" placeholder="e.g. 3" value="${escapeHtml(s.m3NewDose)}"
+                oninput="ControlCalc.state.m3NewDose=this.value; ControlCalc.compute();">
+            </div>`;
+        }
+
+        document.getElementById('calc-body').innerHTML = `
+          <div class="workspace">
+            <div class="panel">
+              <div class="tabs">
+                <button type="button" class="tab-btn ${s.mode === 1 ? 'active' : ''}" onclick="ControlCalc.setMode(1)">Single Fill</button>
+                <button type="button" class="tab-btn ${s.mode === 2 ? 'active' : ''}" onclick="ControlCalc.setMode(2)">Multi-Fill</button>
+                <button type="button" class="tab-btn ${s.mode === 3 ? 'active' : ''}" onclick="ControlCalc.setMode(3)">Dose Change</button>
+              </div>
+              ${formHtml}
+              <div class="field" style="margin-top:0.95rem; margin-bottom:0;">
+                <label>Early Fill Window</label>
+                <div class="early-window-box">
+                  <div class="pill-row" id="ctrl-early-pills">${earlyPills}</div>
+                  <div class="custom-early-group">
+                    <label for="ctrl-custom-early">Custom days</label>
+                    <input id="ctrl-custom-early"
+                      class="custom-early-input ${parsedEarly === null ? 'input-invalid' : ''}"
+                      type="text"
+                      inputmode="numeric"
+                      placeholder="Custom"
+                      value="${escapeHtml(s.earlyDaysInput)}"
+                      oninput="ControlCalc.updateCustomEarly(this.value)">
+                  </div>
+                </div>
+              </div>
+            </div>
+            <div class="panel" id="ctrl-result"></div>
+          </div>`;
+        this.compute();
+      },
+      compute() {
+        const out = document.getElementById('ctrl-result');
+        const s = this.state;
+        const earlyDays = this.parseEarlyDays();
+
+        // --- Mode 1: Single Fill ---
+        if (s.mode === 1) {
+          const dt = parseISODateUTC(s.m1Date);
+          const sup = parseStrictFloat(s.m1Supply);
+          if (!dt || isNaN(sup) || sup <= 0 || !Number.isInteger(sup)) {
+            lastSummaryText = '';
+            out.innerHTML = `<div class="panel-title">Fill Dates</div><div class="alert-note err">Select a valid date and whole-number Days Supply (> 0).</div>`;
+            return;
+          }
+          const nextDt = addDaysUTC(dt, sup);
+          const today = parseISODateUTC(todayISO());
+          const daysUntil = diffDaysUTC(today, nextDt);
+
+          lastSummaryText = `Controlled Substance Next Fill\nPrevious Fill: ${fmtDateShort(dt)} (+${sup}d)\nNext Fill Due: ${fmtDateDisplay(nextDt)}\n${this.buildEarlySummaryLine(nextDt, earlyDays)}`;
+          out.innerHTML = `
+            <div class="panel-title">Calculated Dates</div>
+            <div class="result-hero success">
+              <div class="result-label">Next Fill Due Date</div>
+              <div class="result-value">${fmtDateShort(nextDt)}</div>
+              <div class="result-sub">${fmtDateDisplay(nextDt)}${daysUntil === 0 ? ' — DUE TODAY' : daysUntil > 0 ? ` (in ${daysUntil}d)` : ` (${Math.abs(daysUntil)}d ago)`}</div>
+            </div>
+            ${this.buildEarlyCardHtml(nextDt, earlyDays)}
+            <div class="breakdown">
+              <div class="breakdown-line"><span>Previous Fill</span><strong>${fmtDateShort(dt)}</strong></div>
+              <div class="breakdown-line"><span>Day Supply Added</span><strong>+${sup} days</strong></div>
+            </div>`;
+          return;
+        }
+
+        // --- Mode 2: Multi-Fill Tracker ---
+        if (s.mode === 2) {
+          const firstDt = parseISODateUTC(s.m2First);
+          const refDt = parseISODateUTC(s.m2Ref);
+          const sup = parseStrictFloat(s.m2Supply);
+          if (!firstDt || !refDt) {
+            lastSummaryText = '';
+            out.innerHTML = `
+              <div class="panel-title">Multi-Fill Tracker</div>
+              <div class="result-hero">
+                <div class="result-label">Waiting</div>
+                <div class="result-value">—</div>
+                <div class="result-sub">Select the First Fill Date to track fill cadence.</div>
+              </div>`;
+            return;
+          }
+          if (isNaN(sup) || sup <= 0 || !Number.isInteger(sup)) {
+            lastSummaryText = '';
+            out.innerHTML = `<div class="panel-title">Multi-Fill Tracker</div><div class="alert-note err">Enter a valid whole-number Days Supply (> 0).</div>`;
+            return;
+          }
+          if (diffDaysUTC(firstDt, refDt) < 0) {
+            lastSummaryText = '';
+            out.innerHTML = `<div class="panel-title">Multi-Fill Tracker</div><div class="alert-note err">Reference date cannot be earlier than the First Fill Date.</div>`;
+            return;
+          }
+
+          let fillsDone = 1;
+          let lastFill = firstDt;
+          let nextFill = addDaysUTC(firstDt, sup);
+
+          // Strict < ensures that if nextFill === refDt, it accurately reports DUE TODAY
+          while (nextFill.getTime() < refDt.getTime()) {
+            lastFill = nextFill;
+            fillsDone++;
+            nextFill = addDaysUTC(nextFill, sup);
+          }
+
+          const isDueToday = nextFill.getTime() === refDt.getTime();
+          const earlyFill = earlyDays !== null ? addDaysUTC(nextFill, -earlyDays) : null;
+          const isEarlyEligible = earlyDays !== null && earlyDays > 0 && !isDueToday && refDt.getTime() >= earlyFill.getTime();
+
+          lastSummaryText = `Controlled Multi-Fill Tracker\nFirst Fill: ${fmtDateShort(firstDt)} | Supply: ${sup}d\nPrior Fills: ${fillsDone}\nLast Expected Fill: ${fmtDateShort(lastFill)}\nNext Fill Due: ${fmtDateDisplay(nextFill)}${isDueToday ? ' (DUE TODAY)' : ''}\n${this.buildEarlySummaryLine(nextFill, earlyDays)}`;
+
+          out.innerHTML = `
+            <div class="panel-title">Fill Schedule</div>
+            ${isDueToday ? `<div class="alert-note ok">✓ DUE TODAY (${fmtDateShort(refDt)})!</div>` : ''}
+            ${isEarlyEligible ? `<div class="alert-note warn">Eligible within ${earlyDays}-day early fill window as of ${fmtDateShort(refDt)}.</div>` : ''}
+            <div class="result-hero success">
+              <div class="result-label">Next Fill Due Date</div>
+              <div class="result-value">${fmtDateShort(nextFill)}</div>
+              <div class="result-sub">${fmtDateDisplay(nextFill)}</div>
+            </div>
+            ${this.buildEarlyCardHtml(nextFill, earlyDays)}
+            <div class="stat-grid">
+              <div class="stat-box"><div class="k">Prior Fills</div><div class="v">${fillsDone}</div></div>
+              <div class="stat-box"><div class="k">Last Fill Date</div><div class="v">${fmtDateShort(lastFill)}</div></div>
+            </div>`;
+          return;
+        }
+
+        // --- Mode 3: Dose Change ---
+        const origDt = parseISODateUTC(s.m3OrigDate);
+        const newDt = parseISODateUTC(s.m3NewDate);
+        const origQty = parseStrictFloat(s.m3OrigQty);
+        const origDose = parseStrictFloat(s.m3OrigDose);
+        const newDose = parseStrictFloat(s.m3NewDose);
+
+        if (!origDt || !newDt) {
+          lastSummaryText = '';
+          out.innerHTML = `
+            <div class="panel-title">Change in Therapy</div>
+            <div class="result-hero">
+              <div class="result-label">Waiting</div>
+              <div class="result-value">—</div>
+              <div class="result-sub">Select Original Fill Date and Dose Change Date.</div>
+            </div>`;
+          return;
+        }
+        if (isNaN(origQty) || origQty <= 0 || isNaN(origDose) || origDose <= 0 || isNaN(newDose) || newDose <= 0) {
+          lastSummaryText = '';
+          out.innerHTML = `<div class="panel-title">Change in Therapy</div><div class="alert-note err">Original quantity and both daily doses must be positive numbers.</div>`;
+          return;
+        }
+        const daysOnOld = diffDaysUTC(origDt, newDt);
+        if (daysOnOld < 0) {
+          lastSummaryText = '';
+          out.innerHTML = `<div class="panel-title">Change in Therapy</div><div class="alert-note err">Dose change date cannot be before original fill date.</div>`;
+          return;
+        }
+
+        const usedUnits = roundFix(daysOnOld * origDose);
+        const leftUnits = roundFix(origQty - usedUnits);
+
+        if (leftUnits < -1e-9) {
+          const origDaysTotal = Math.floor((Math.round(origQty * SCALE)) / Math.round(origDose * SCALE));
+          const ranOutDate = addDaysUTC(origDt, origDaysTotal);
+          lastSummaryText = `Controlled Dose Change: Supply Exhausted Early\nDays on old dose: ${daysOnOld}\nUsed: ${fmtNum(usedUnits, 2)} vs Filled: ${fmtNum(origQty, 2)}\nShort by: ${fmtNum(Math.abs(leftUnits), 2)} units (ran out ~${fmtDateShort(ranOutDate)})`;
+          out.innerHTML = `
+            <div class="panel-title">Change in Therapy</div>
+            <div class="result-hero danger">
+              <div class="result-label">Supply Exhausted Before Change Date</div>
+              <div class="result-value">Short ${fmtNum(Math.abs(leftUnits), 2)} units</div>
+              <div class="result-sub">Original fill covered ${origDaysTotal} full day(s) (through ~${fmtDateShort(ranOutDate)}).</div>
+            </div>
+            <div class="breakdown">
+              <div class="breakdown-line"><span>Days on Old Dose</span><strong>${daysOnOld} days</strong></div>
+              <div class="breakdown-line"><span>Units Used (${daysOnOld} × ${fmtNum(origDose, 2)})</span><strong>${fmtNum(usedUnits, 2)}</strong></div>
+              <div class="breakdown-line"><span>Original Qty Filled</span><strong>${fmtNum(origQty, 2)}</strong></div>
+            </div>`;
+          return;
+        }
+
+        // Scaled integer division avoids float floor errors (e.g. 0.6 / 0.2 === 3 exact)
+        const leftScaled = Math.round(leftUnits * SCALE);
+        const newDoseScaled = Math.round(newDose * SCALE);
+        const fullDaysLeft = Math.floor(leftScaled / newDoseScaled);
+        const partialUnits = roundFix((leftScaled % newDoseScaled) / SCALE);
+        const nextFillDate = addDaysUTC(newDt, fullDaysLeft);
+
+        const coverageText = fullDaysLeft >= 1
+          ? `${fmtDateShort(newDt)} through ${fmtDateShort(addDaysUTC(newDt, fullDaysLeft - 1))}`
+          : (partialUnits > 0
+              ? `Less than 1 full day (${fmtNum(partialUnits, 2)} partial units on ${fmtDateShort(newDt)})`
+              : `0 days remaining on ${fmtDateShort(newDt)}`);
+
+        lastSummaryText = `Controlled Dose Change\nOrig Fill: ${fmtDateShort(origDt)} (Qty ${fmtNum(origQty, 2)}, ${fmtNum(origDose, 2)}/day)\nChange Date: ${fmtDateShort(newDt)} (${daysOnOld}d on old dose)\nUsed: ${fmtNum(usedUnits, 2)} | Remaining: ${fmtNum(leftUnits, 2)}\nNew Dose (${fmtNum(newDose, 2)}/day): ${fullDaysLeft} full day(s)` +
+          (partialUnits > 0 ? ` + ${fmtNum(partialUnits, 2)} partial units` : '') +
+          `\nNext Theoretical Fill: ${fmtDateDisplay(nextFillDate)}\n${this.buildEarlySummaryLine(nextFillDate, earlyDays)}`;
+
+        out.innerHTML = `
+          <div class="panel-title">New Supply Dates</div>
+          <div class="result-hero success">
+            <div class="result-label">Next Theoretical Fill Date</div>
+            <div class="result-value">${fmtDateShort(nextFillDate)}</div>
+            <div class="result-sub">${fmtDateDisplay(nextFillDate)}</div>
+          </div>
+          ${this.buildEarlyCardHtml(nextFillDate, earlyDays)}
+          <div class="stat-grid">
+            <div class="stat-box"><div class="k">Units Remaining</div><div class="v">${fmtNum(leftUnits, 2)}</div></div>
+            <div class="stat-box"><div class="k">New Supply</div><div class="v">${fullDaysLeft}d${partialUnits > 0 ? ` (+${fmtNum(partialUnits, 2)}u)` : ''}</div></div>
+          </div>
+          <div class="breakdown">
+            <div class="breakdown-line"><span>Days on Old Dose</span><strong>${daysOnOld} days</strong></div>
+            <div class="breakdown-line"><span>Units Used</span><strong>${fmtNum(usedUnits, 2)} units</strong></div>
+            <div class="breakdown-line"><span>Supply Covers</span><strong>${coverageText}</strong></div>
+          </div>`;
+      }
+    };
+
+    /* =========================================================================
+       5. REFILL CALCULATOR (Scaled Integer Precision)
+       ========================================================================= */
+    const RefillCalc = {
+      state: { prescribed: '30', refills: '3', dispensed: '30' },
+      reset() {
+        this.state = { prescribed: '', refills: '', dispensed: '' };
+        this.render();
+      },
+      render() {
+        const s = this.state;
+        document.getElementById('calc-body').innerHTML = `
+          <div class="workspace">
+            <div class="panel">
+              <div class="panel-title">Prescription Details</div>
+              <div class="field">
+                <label>Prescribed Quantity per Fill</label>
+                <input type="text" inputmode="decimal" placeholder="e.g. 30" value="${escapeHtml(s.prescribed)}"
+                  oninput="RefillCalc.state.prescribed=this.value; RefillCalc.compute();">
+              </div>
+              <div class="field">
+                <label>Original Refills Authorized (whole number ≥ 0)</label>
+                <input type="text" inputmode="numeric" placeholder="e.g. 3" value="${escapeHtml(s.refills)}"
+                  oninput="RefillCalc.state.refills=this.value; RefillCalc.compute();">
+              </div>
+              <div class="field" style="margin-bottom:0;">
+                <label>Dispensed Quantity (this fill)</label>
+                <input type="text" inputmode="decimal" placeholder="e.g. 90" value="${escapeHtml(s.dispensed)}"
+                  oninput="RefillCalc.state.dispensed=this.value; RefillCalc.compute();">
+              </div>
+            </div>
+            <div class="panel" id="refill-result"></div>
+          </div>`;
+        this.compute();
+      },
+      compute() {
+        const out = document.getElementById('refill-result');
+        const p = parseStrictFloat(this.state.prescribed);
+        const r = parseStrictFloat(this.state.refills);
+        const d = parseStrictFloat(this.state.dispensed);
+
+        if (isNaN(p) || isNaN(r) || isNaN(d)) {
+          lastSummaryText = '';
+          out.innerHTML = `
+            <div class="panel-title">Updated Refills</div>
+            <div class="result-hero">
+              <div class="result-label">Waiting</div>
+              <div class="result-value">—</div>
+              <div class="result-sub">Fill all three fields to calculate refills remaining.</div>
+            </div>`;
+          return;
+        }
+        if (p <= 0 || d <= 0 || r < 0 || !Number.isInteger(r)) {
+          lastSummaryText = '';
+          out.innerHTML = `<div class="panel-title">Updated Refills</div><div class="alert-note err">Quantities must be > 0 and Original Refills must be a whole number ≥ 0.</div>`;
+          return;
+        }
+
+        const totalAuth = roundFix(p * (1 + r));
+        const qtyRemain = roundFix(totalAuth - d);
+
+        if (qtyRemain < -1e-9) {
+          const over = Math.abs(qtyRemain);
+          lastSummaryText = `Refill Calculator WARNING\nTotal Authorized: ${fmtNum(totalAuth, 2)}\nDispensed: ${fmtNum(d, 2)}\nOVER-DISPENSED by ${fmtNum(over, 2)}`;
+          out.innerHTML = `
+            <div class="panel-title">Warning</div>
+            <div class="result-hero danger">
+              <div class="result-label">Over-Dispensed!</div>
+              <div class="result-value">+${fmtNum(over, 2)} over limit</div>
+              <div class="result-sub">Total authorized across all fills is ${fmtNum(totalAuth, 2)}.</div>
+            </div>`;
+          return;
+        }
+
+        const remScaled = Math.round(qtyRemain * SCALE);
+        const dispScaled = Math.round(d * SCALE);
+        const newRefills = Math.floor(remScaled / dispScaled);
+        const finalPartial = roundFix((remScaled % dispScaled) / SCALE);
+
+        lastSummaryText = `Refill Calculator\nTotal Authorized: ${fmtNum(totalAuth, 2)} (${fmtNum(p, 2)} × ${1 + r} fills)\nDispensed This Fill: ${fmtNum(d, 2)}\nQty Remaining: ${fmtNum(qtyRemain, 2)}\nNew Full Refills (@ ${fmtNum(d, 2)}): ${newRefills}\nFinal Partial Qty: ${fmtNum(finalPartial, 2)}`;
+
+        out.innerHTML = `
+          <div class="panel-title">Updated Refills</div>
+          <div class="result-hero success">
+            <div class="result-label">New Full Refills Remaining</div>
+            <div class="result-value">${newRefills} refill${newRefills === 1 ? '' : 's'}</div>
+            <div class="result-sub">${finalPartial > 0 ? `Plus a final partial fill of ${fmtNum(finalPartial, 2)}` : 'No partial remainder'}</div>
+          </div>
+          <div class="stat-grid">
+            <div class="stat-box"><div class="k">Total Authorized</div><div class="v">${fmtNum(totalAuth, 2)}</div></div>
+            <div class="stat-box"><div class="k">Qty Remaining</div><div class="v">${fmtNum(qtyRemain, 2)}</div></div>
+          </div>
+          <div class="breakdown">
+            <div class="breakdown-line"><span>Authorized Fills</span><strong>${1 + r} × ${fmtNum(p, 2)}</strong></div>
+            <div class="breakdown-line"><span>Dispensed Now</span><strong>${fmtNum(d, 2)}</strong></div>
+            <div class="breakdown-line"><span>Full Refills @ ${fmtNum(d, 2)}</span><strong>${newRefills}</strong></div>
+            <div class="breakdown-line"><span>Final Partial Qty</span><strong>${fmtNum(finalPartial, 2)}</strong></div>
+          </div>`;
+      }
+    };
+
+    /* =========================================================================
+       6. MED COST ADJUSTER (Exact Integer Cents + Undo Stack)
+       ========================================================================= */
+    const PriceAdjCalc = {
+      state: {
+        meds: [
+          { name: 'Medication 1', cents: 1500 },
+          { name: 'Medication 2', cents: 2450 }
+        ],
+        selectedIdx: 0,
+        newName: '',
+        newPrice: '',
+        desiredTotal: '',
+        history: [],
+        lastMessage: null
+      },
+      reset() {
+        this.state = {
+          meds: [], selectedIdx: 0,
+          newName: '', newPrice: '', desiredTotal: '',
+          history: [], lastMessage: null
+        };
+        this.render();
+      },
+      addMed() {
+        vibrate();
+        const priceVal = parseStrictFloat(this.state.newPrice);
+        if (isNaN(priceVal) || priceVal < 0) {
+          this.state.lastMessage = { type: 'err', text: 'Enter a valid non-negative price (e.g. 12.50).' };
+          this.render();
+          return;
+        }
+        const cents = Math.round((priceVal + Number.EPSILON) * 100);
+        const name = this.state.newName.trim() || `Medication ${this.state.meds.length + 1}`;
+        this.state.history.push(JSON.stringify(this.state.meds));
+        this.state.meds.push({ name, cents });
+        this.state.newName = '';
+        this.state.newPrice = '';
+        this.state.selectedIdx = this.state.meds.length - 1;
+        this.state.lastMessage = { type: 'ok', text: `Added ${name} at ${fmtCurrency(cents)}.` };
+        this.render();
+      },
+      removeMed(idx) {
+        vibrate();
+        this.state.history.push(JSON.stringify(this.state.meds));
+        const removed = this.state.meds.splice(idx, 1)[0];
+        if (this.state.selectedIdx >= this.state.meds.length) {
+          this.state.selectedIdx = Math.max(0, this.state.meds.length - 1);
+        }
+        this.state.lastMessage = { type: 'warn', text: `Removed ${removed.name} (${fmtCurrency(removed.cents)}).` };
+        this.render();
+      },
+      selectMed(idx) {
+        vibrate();
+        this.state.selectedIdx = idx;
+        this.render();
+      },
+      applyAdjustment() {
+        vibrate();
+        if (!this.state.meds.length) {
+          this.state.lastMessage = { type: 'err', text: 'Add at least one medication first.' };
+          this.render();
+          return;
+        }
+        const desiredVal = parseStrictFloat(this.state.desiredTotal);
+        if (isNaN(desiredVal) || desiredVal < 0) {
+          this.state.lastMessage = { type: 'err', text: 'Enter a valid desired grand total ($0.00 or more).' };
+          this.render();
+          return;
+        }
+        const desiredCents = Math.round((desiredVal + Number.EPSILON) * 100);
+        const currentTotalCents = this.state.meds.reduce((acc, m) => acc + m.cents, 0);
+        const diffCents = desiredCents - currentTotalCents;
+        const target = this.state.meds[this.state.selectedIdx];
+        const newTargetCents = target.cents + diffCents;
+
+        if (newTargetCents < 0) {
+          this.state.lastMessage = {
+            type: 'err',
+            text: `Cannot set ${target.name} to ${fmtCurrency(newTargetCents)} (negative). Max reduction on this item is ${fmtCurrency(target.cents)}.`
+          };
+          this.render();
+          return;
+        }
+
+        this.state.history.push(JSON.stringify(this.state.meds));
+        const oldCents = target.cents;
+        target.cents = newTargetCents;
+        this.state.desiredTotal = '';
+        this.state.lastMessage = {
+          type: 'ok',
+          text: `Adjusted ${target.name}: ${fmtCurrency(oldCents)} → ${fmtCurrency(newTargetCents)} (${diffCents >= 0 ? '+' : ''}${fmtCurrency(diffCents)}).`
+        };
+        this.render();
+      },
+      undo() {
+        vibrate();
+        if (!this.state.history.length) {
+          showToast('Nothing to undo');
+          return;
+        }
+        this.state.meds = JSON.parse(this.state.history.pop());
+        this.state.selectedIdx = Math.min(this.state.selectedIdx, Math.max(0, this.state.meds.length - 1));
+        this.state.lastMessage = { type: 'warn', text: 'Undid last change.' };
+        this.render();
+      },
+      render() {
+        const s = this.state;
+        const totalCents = s.meds.reduce((acc, m) => acc + m.cents, 0);
+
+        lastSummaryText = s.meds.length
+          ? `Med Cost Adjuster\n` + s.meds.map((m, i) => `${i + 1}. ${m.name}: ${fmtCurrency(m.cents)}`).join('\n') + `\nGrand Total: ${fmtCurrency(totalCents)}`
+          : '';
+
+        const listHtml = s.meds.length
+          ? s.meds.map((m, i) => `
+              <div class="med-price-item ${i === s.selectedIdx ? 'selected' : ''}" onclick="PriceAdjCalc.selectMed(${i})">
+                <div class="med-price-info">
+                  <span class="med-price-name">${i + 1}. ${escapeHtml(m.name)} ${i === s.selectedIdx ? '<span style="color:var(--accent);font-size:0.75rem;">(Selected Target)</span>' : ''}</span>
+                  <span class="med-price-val">${fmtCurrency(m.cents)}</span>
+                </div>
+                <button class="btn btn-sm btn-danger" onclick="event.stopPropagation(); PriceAdjCalc.removeMed(${i})" title="Remove item">✕</button>
+              </div>`).join('')
+          : `<div class="alert-note warn">No medications listed yet. Add a price above.</div>`;
+
+        document.getElementById('calc-body').innerHTML = `
+          <div class="workspace">
+            <div class="panel">
+              <div class="panel-title">
+                <span>Add Medication Price</span>
+                <button class="btn btn-sm" onclick="PriceAdjCalc.undo()" ${s.history.length ? '' : 'disabled'}>↶ Undo</button>
+              </div>
+              <div class="field-grid">
+                <div class="field">
+                  <label>Label (optional)</label>
+                  <input type="text" placeholder="e.g. Lisinopril" value="${escapeHtml(s.newName)}"
+                    oninput="PriceAdjCalc.state.newName=this.value"
+                    onkeydown="if(event.key==='Enter') PriceAdjCalc.addMed();">
+                </div>
+                <div class="field">
+                  <label>Price ($)</label>
+                  <div class="input-row">
+                    <input type="text" inputmode="decimal" placeholder="e.g. 12.50" value="${escapeHtml(s.newPrice)}"
+                      oninput="PriceAdjCalc.state.newPrice=this.value"
+                      onkeydown="if(event.key==='Enter') PriceAdjCalc.addMed();">
+                    <button class="btn btn-primary" onclick="PriceAdjCalc.addMed()">+ Add</button>
+                  </div>
+                </div>
+              </div>
+
+              <div class="panel-title" style="margin-top:1.1rem;"><span>Medications (tap one to select)</span></div>
+              ${listHtml}
+            </div>
+
+            <div class="panel">
+              <div class="panel-title">Target Total Adjustment</div>
+              <div class="result-hero success">
+                <div class="result-label">Current Grand Total</div>
+                <div class="result-value">${fmtCurrency(totalCents)}</div>
+                <div class="result-sub">${s.meds.length} medication${s.meds.length === 1 ? '' : 's'} listed</div>
+              </div>
+
+              ${s.lastMessage ? `<div class="alert-note ${s.lastMessage.type}">${escapeHtml(s.lastMessage.text)}</div>` : ''}
+
+              <div class="field">
+                <label>New Desired Grand Total ($)</label>
+                <div class="input-row">
+                  <input type="text" inputmode="decimal" placeholder="e.g. 35.00" value="${escapeHtml(s.desiredTotal)}"
+                    oninput="PriceAdjCalc.state.desiredTotal=this.value"
+                    onkeydown="if(event.key==='Enter') PriceAdjCalc.applyAdjustment();">
+                  <button class="btn btn-primary" onclick="PriceAdjCalc.applyAdjustment()">Adjust</button>
+                </div>
+              </div>
+              <p style="font-size:0.82rem;color:var(--text-secondary);">
+                Exact cent difference applies to: <strong>${s.meds[s.selectedIdx] ? escapeHtml(s.meds[s.selectedIdx].name) : 'None selected'}</strong>
+              </p>
+            </div>
+          </div>`;
+      }
+    };
+
+    /* =========================================================================
+       7. ESTRADIOL SUPPLY CALCULATOR (4 Modes, Exact Simulation)
+       ========================================================================= */
+    const EstradiolCalc = {
+      state: {
+        totalG: '42.5',
+        mode: 3,
+        // Mode 1: Daily Only
+        m1DailyG: '1',
+        // Mode 2: Weekly Only
+        m2Weeks: ['2'],
+        m2RepeatLast: true,
+        // Mode 3: Daily Load -> Weekly Maint
+        m3LoadDays: '14',
+        m3LoadG: '1',
+        m3Weeks: ['2'],
+        m3RepeatLast: true,
+        // Mode 4: Weekly Phase -> Daily Maint
+        m4WeeklyDays: '14',
+        m4Weeks: ['2'],
+        m4RepeatLast: true,
+        m4MaintDailyG: '1'
+      },
+      reset() {
+        const mode = this.state.mode;
+        this.state = {
+          totalG: '42.5', mode,
+          m1DailyG: '',
+          m2Weeks: [''], m2RepeatLast: true,
+          m3LoadDays: '', m3LoadG: '', m3Weeks: [''], m3RepeatLast: true,
+          m4WeeklyDays: '', m4Weeks: [''], m4RepeatLast: true, m4MaintDailyG: ''
+        };
+        this.render();
+      },
+      setMode(m) {
+        vibrate();
+        this.state.mode = m;
+        this.render();
+      },
+      addWeek(arrKey) {
+        vibrate();
+        this.state[arrKey].push('');
+        this.render();
+      },
+      removeWeek(arrKey, idx) {
+        vibrate();
+        this.state[arrKey].splice(idx, 1);
+        if (!this.state[arrKey].length) this.state[arrKey].push('');
+        this.render();
+      },
+      renderWeekList(arrKey, repeatKey, title) {
+        const arr = this.state[arrKey];
+        return `
+          <div class="panel-title" style="margin-top:0.85rem;">
+            <span>${title}</span>
+            <button class="btn btn-sm btn-primary" onclick="EstradiolCalc.addWeek('${arrKey}')">+ Add Week</button>
+          </div>
+          <div class="step-list">
+            ${arr.map((g, i) => `
+              <div class="step-row week-only">
+                <span class="step-num">Week ${i + 1}</span>
+                <input type="text" inputmode="decimal" placeholder="Grams for Week ${i + 1}" value="${escapeHtml(g)}"
+                  oninput="EstradiolCalc.state.${arrKey}[${i}]=this.value; EstradiolCalc.compute();">
+                <button class="btn btn-sm btn-danger" onclick="EstradiolCalc.removeWeek('${arrKey}', ${i})" title="Remove week">✕</button>
+              </div>`).join('')}
+          </div>
+          <label class="check-label" style="margin-bottom:0.85rem;">
+            <input type="checkbox" ${this.state[repeatKey] ? 'checked' : ''}
+              onchange="EstradiolCalc.state.${repeatKey}=this.checked; EstradiolCalc.compute();">
+            Continue using last entered week's dose until tube/phase completes
+          </label>`;
+      },
+      render() {
+        const s = this.state;
+        let body = '';
+        if (s.mode === 1) {
+          body = `
+            <div class="field" style="margin-bottom:0;">
+              <label>Grams Used per DAY</label>
+              <input type="text" inputmode="decimal" placeholder="e.g. 1" value="${escapeHtml(s.m1DailyG)}"
+                oninput="EstradiolCalc.state.m1DailyG=this.value; EstradiolCalc.compute();">
+            </div>`;
+        } else if (s.mode === 2) {
+          body = this.renderWeekList('m2Weeks', 'm2RepeatLast', 'Weekly Grams Schedule');
+        } else if (s.mode === 3) {
+          body = `
+            <div class="field-grid">
+              <div class="field">
+                <label>Daily Loading Duration (days)</label>
+                <input type="text" inputmode="decimal" placeholder="e.g. 14" value="${escapeHtml(s.m3LoadDays)}"
+                  oninput="EstradiolCalc.state.m3LoadDays=this.value; EstradiolCalc.compute();">
+              </div>
+              <div class="field">
+                <label>Loading Dose (g / day)</label>
+                <input type="text" inputmode="decimal" placeholder="e.g. 1" value="${escapeHtml(s.m3LoadG)}"
+                  oninput="EstradiolCalc.state.m3LoadG=this.value; EstradiolCalc.compute();">
+              </div>
+            </div>
+            ${this.renderWeekList('m3Weeks', 'm3RepeatLast', 'Weekly Maintenance Phase')}`;
+        } else {
+          body = `
+            <div class="field">
+              <label>Weekly Phase Duration (days)</label>
+              <input type="text" inputmode="decimal" placeholder="e.g. 14" value="${escapeHtml(s.m4WeeklyDays)}"
+                oninput="EstradiolCalc.state.m4WeeklyDays=this.value; EstradiolCalc.compute();">
+            </div>
+            ${this.renderWeekList('m4Weeks', 'm4RepeatLast', 'Weekly Phase Grams')}
+            <div class="field" style="margin-bottom:0;">
+              <label>Daily Maintenance Dose (g / day)</label>
+              <input type="text" inputmode="decimal" placeholder="e.g. 1" value="${escapeHtml(s.m4MaintDailyG)}"
+                oninput="EstradiolCalc.state.m4MaintDailyG=this.value; EstradiolCalc.compute();">
+            </div>`;
+        }
+
+        document.getElementById('calc-body').innerHTML = `
+          <div class="workspace">
+            <div class="panel">
+              <div class="field">
+                <label>Total Grams in Tube</label>
+                <input type="text" inputmode="decimal" placeholder="e.g. 42.5" value="${escapeHtml(s.totalG)}"
+                  oninput="EstradiolCalc.state.totalG=this.value; EstradiolCalc.compute();">
+                <div class="pill-row">
+                  <button class="pill ${s.totalG === '42.5' ? 'active' : ''}" onclick="EstradiolCalc.state.totalG='42.5'; EstradiolCalc.render();">42.5 g</button>
+                  <button class="pill ${s.totalG === '30' ? 'active' : ''}" onclick="EstradiolCalc.state.totalG='30'; EstradiolCalc.render();">30 g</button>
+                  <button class="pill ${s.totalG === '15' ? 'active' : ''}" onclick="EstradiolCalc.state.totalG='15'; EstradiolCalc.render();">15 g</button>
+                </div>
+              </div>
+
+              <div class="tabs">
+                <button class="tab-btn ${s.mode === 1 ? 'active' : ''}" onclick="EstradiolCalc.setMode(1)">Daily</button>
+                <button class="tab-btn ${s.mode === 2 ? 'active' : ''}" onclick="EstradiolCalc.setMode(2)">Weekly</button>
+                <button class="tab-btn ${s.mode === 3 ? 'active' : ''}" onclick="EstradiolCalc.setMode(3)">Daily → Wkly</button>
+                <button class="tab-btn ${s.mode === 4 ? 'active' : ''}" onclick="EstradiolCalc.setMode(4)">Wkly → Daily</button>
+              </div>
+              ${body}
+            </div>
+            <div class="panel" id="est-result"></div>
+          </div>`;
+        this.compute();
+      },
+      /** Step-by-step weekly simulation; repeats MOST RECENT entered week if repeatLast is enabled */
+      simulateWeekly(startGrams, weeksRaw, repeatLast, maxDaysLimit = null) {
+        const doses = [];
+        for (let i = 0; i < weeksRaw.length; i++) {
+          if (weeksRaw[i].trim() === '') continue;
+          const v = parseStrictFloat(weeksRaw[i]);
+          if (isNaN(v) || v < 0) return { error: `Week ${i + 1}: enter a valid non-negative gram amount.` };
+          doses.push(v);
+        }
+        if (!doses.length) return { waiting: true };
+
+        let gRem = startGrams;
+        let daysAcc = 0;
+        const logs = [];
+        let emptied = false;
+
+        for (let i = 0; i < doses.length; i++) {
+          const wDose = doses[i];
+          const daysCap = maxDaysLimit !== null ? Math.min(7, roundFix(maxDaysLimit - daysAcc)) : 7;
+          if (daysCap <= 1e-9) break;
+
+          const needed = roundFix((wDose / 7) * daysCap);
+          if (wDose === 0) {
+            daysAcc = roundFix(daysAcc + daysCap);
+            logs.push({ label: `Week ${i + 1} (${fmtNum(daysCap, 1)}d @ 0g/wk)`, val: `${fmtNum(gRem, 2)}g left` });
+          } else if (needed <= gRem + 1e-9) {
+            gRem = roundFix(gRem - needed);
+            daysAcc = roundFix(daysAcc + daysCap);
+            logs.push({ label: `Week ${i + 1} (${fmtNum(needed, 2)}g used)`, val: `${fmtNum(gRem, 2)}g left` });
+            if (gRem <= 1e-9) {
+              emptied = true;
+              break;
+            }
+          } else {
+            const partialDays = gRem / (wDose / 7);
+            daysAcc = roundFix(daysAcc + partialDays);
+            logs.push({ label: `Week ${i + 1} (empties @ ${fmtNum(wDose, 2)}g/wk)`, val: `+${fmtNum(partialDays, 1)} days` });
+            gRem = 0;
+            emptied = true;
+            break;
+          }
+        }
+
+        if (!emptied && repeatLast) {
+          const lastDose = doses[doses.length - 1];
+          if (maxDaysLimit !== null) {
+            const remPhaseDays = roundFix(maxDaysLimit - daysAcc);
+            if (remPhaseDays > 1e-9) {
+              if (lastDose === 0) {
+                daysAcc = roundFix(daysAcc + remPhaseDays);
+                logs.push({ label: `Constant 0g/wk × ${fmtNum(remPhaseDays, 1)}d`, val: `${fmtNum(gRem, 2)}g left` });
+              } else {
+                const need = roundFix((lastDose / 7) * remPhaseDays);
+                if (need <= gRem + 1e-9) {
+                  gRem = roundFix(gRem - need);
+                  daysAcc = roundFix(daysAcc + remPhaseDays);
+                  logs.push({ label: `Constant ${fmtNum(lastDose, 2)}g/wk × ${fmtNum(remPhaseDays, 1)}d`, val: `${fmtNum(gRem, 2)}g left` });
+                  if (gRem <= 1e-9) emptied = true;
+                } else {
+                  const partialDays = gRem / (lastDose / 7);
+                  daysAcc = roundFix(daysAcc + partialDays);
+                  logs.push({ label: `Constant ${fmtNum(lastDose, 2)}g/wk (empties)`, val: `+${fmtNum(partialDays, 1)} days` });
+                  gRem = 0;
+                  emptied = true;
+                }
+              }
+            }
+          } else if (lastDose > 0 && gRem > 1e-9) {
+            const extraDays = (gRem / lastDose) * 7;
+            daysAcc = roundFix(daysAcc + extraDays);
+            logs.push({ label: `Constant ${fmtNum(lastDose, 2)}g/wk (${fmtNum(gRem, 2)}g)`, val: `+${fmtNum(extraDays, 1)} days` });
+            gRem = 0;
+            emptied = true;
+          }
+        }
+
+        return { daysAcc, gRem, emptied, logs };
+      },
+      compute() {
+        const out = document.getElementById('est-result');
+        const s = this.state;
+        const totalG = parseStrictFloat(s.totalG);
+        if (isNaN(totalG) || totalG <= 0) {
+          lastSummaryText = '';
+          out.innerHTML = `<div class="panel-title">Supply Result</div><div class="alert-note err">Enter a valid Tube Size (grams > 0).</div>`;
+          return;
+        }
+
+        if (s.mode === 1) {
+          const d = parseStrictFloat(s.m1DailyG);
+          if (isNaN(d) || d < 0) {
+            lastSummaryText = '';
+            out.innerHTML = `<div class="panel-title">Supply Result</div><div class="result-hero"><div class="result-label">Waiting</div><div class="result-value">—</div><div class="result-sub">Enter daily grams used.</div></div>`;
+            return;
+          }
+          if (d === 0) {
+            lastSummaryText = `Estradiol Daily Supply: Dose is 0 g/day (${fmtNum(totalG, 2)}g unused).`;
+            out.innerHTML = `<div class="panel-title">Supply Result</div><div class="result-hero warning"><div class="result-label">Day Supply</div><div class="result-value">0 days active</div><div class="result-sub">Daily dose is 0 g/day (${fmtNum(totalG, 2)}g unused).</div></div>`;
+            return;
+          }
+          const days = totalG / d;
+          lastSummaryText = `Estradiol Supply (Daily)\nTube: ${fmtNum(totalG, 2)}g | Dose: ${fmtNum(d, 2)}g/day\nTotal Day Supply: ${fmtNum(days, 1)} days`;
+          out.innerHTML = `
+            <div class="panel-title">Supply Result</div>
+            <div class="result-hero success">
+              <div class="result-label">Total Day Supply</div>
+              <div class="result-value">${fmtNum(days, 1)} days</div>
+              <div class="result-sub">${fmtNum(totalG, 2)}g ÷ ${fmtNum(d, 2)}g/day (Whole days: ${Math.floor(days + 1e-9)})</div>
+            </div>`;
+          return;
+        }
+
+        if (s.mode === 2) {
+          const sim = this.simulateWeekly(totalG, s.m2Weeks, s.m2RepeatLast, null);
+          if (sim.error) { lastSummaryText = ''; out.innerHTML = `<div class="panel-title">Supply Result</div><div class="alert-note err">${sim.error}</div>`; return; }
+          if (sim.waiting) { lastSummaryText = ''; out.innerHTML = `<div class="panel-title">Supply Result</div><div class="result-hero"><div class="result-label">Waiting</div><div class="result-value">—</div><div class="result-sub">Enter at least Week 1 grams.</div></div>`; return; }
+
+          lastSummaryText = `Estradiol Supply (Weekly)\nTube: ${fmtNum(totalG, 2)}g\nTotal Day Supply: ${fmtNum(sim.daysAcc, 1)} days\nUnused Grams: ${fmtNum(sim.gRem, 2)}g\n` +
+            sim.logs.map(l => `- ${l.label}: ${l.val}`).join('\n');
+
+          out.innerHTML = `
+            <div class="panel-title">Supply Result</div>
+            <div class="result-hero success">
+              <div class="result-label">Total Day Supply</div>
+              <div class="result-value">${fmtNum(sim.daysAcc, 1)} days</div>
+              <div class="result-sub">${fmtNum(sim.daysAcc / 7, 2)} weeks</div>
+            </div>
+            ${sim.gRem > 1e-6 ? `<div class="alert-note warn">${fmtNum(sim.gRem, 2)}g remains in tube after scheduled weeks.</div>` : ''}
+            <div class="breakdown">
+              ${sim.logs.map(l => `<div class="breakdown-line"><span>${l.label}</span><strong>${l.val}</strong></div>`).join('')}
+            </div>`;
+          return;
+        }
+
+        if (s.mode === 3) {
+          const loadDays = parseStrictFloat(s.m3LoadDays);
+          const loadG = parseStrictFloat(s.m3LoadG);
+          if (isNaN(loadDays) || loadDays < 0 || isNaN(loadG) || loadG < 0) {
+            lastSummaryText = '';
+            out.innerHTML = `<div class="panel-title">Supply Result</div><div class="result-hero"><div class="result-label">Waiting</div><div class="result-value">—</div><div class="result-sub">Enter loading phase duration and daily dose.</div></div>`;
+            return;
+          }
+          const usedLoad = roundFix(loadDays * loadG);
+          if (usedLoad >= totalG - 1e-9 && loadG > 0) {
+            const actualDays = totalG / loadG;
+            lastSummaryText = `Estradiol Supply (Daily → Weekly)\nTube empties during loading phase: ${fmtNum(actualDays, 1)} days`;
+            out.innerHTML = `
+              <div class="panel-title">Supply Result</div>
+              <div class="result-hero warning">
+                <div class="result-label">Empties During Loading Phase</div>
+                <div class="result-value">${fmtNum(actualDays, 1)} days</div>
+                <div class="result-sub">Loading requires ${fmtNum(usedLoad, 2)}g, reaching the ${fmtNum(totalG, 2)}g tube limit.</div>
+              </div>`;
+            return;
+          }
+          const gForMaint = roundFix(totalG - usedLoad);
+          const sim = this.simulateWeekly(gForMaint, s.m3Weeks, s.m3RepeatLast, null);
+          if (sim.error) { lastSummaryText = ''; out.innerHTML = `<div class="panel-title">Supply Result</div><div class="alert-note err">${sim.error}</div>`; return; }
+          if (sim.waiting) { lastSummaryText = ''; out.innerHTML = `<div class="panel-title">Supply Result</div><div class="result-hero"><div class="result-label">Remaining for Maintenance</div><div class="result-value">${fmtNum(gForMaint, 2)} g</div><div class="result-sub">Enter Weekly Maintenance grams to finish.</div></div>`; return; }
+
+          const grandDays = roundFix(loadDays + sim.daysAcc);
+          lastSummaryText = `Estradiol Supply (Daily → Weekly)\nTube: ${fmtNum(totalG, 2)}g\nLoading: ${fmtNum(loadDays, 1)}d × ${fmtNum(loadG, 2)}g/d = ${fmtNum(usedLoad, 2)}g\nRemaining for Maint: ${fmtNum(gForMaint, 2)}g\nMaintenance: ${fmtNum(sim.daysAcc, 1)} days\nTotal Day Supply: ${fmtNum(grandDays, 1)} days`;
+
+          out.innerHTML = `
+            <div class="panel-title">Supply Result</div>
+            <div class="result-hero success">
+              <div class="result-label">Total Day Supply</div>
+              <div class="result-value">${fmtNum(grandDays, 1)} days</div>
+              <div class="result-sub">${fmtNum(loadDays, 1)}d loading + ${fmtNum(sim.daysAcc, 1)}d maintenance</div>
+            </div>
+            ${sim.gRem > 1e-6 ? `<div class="alert-note warn">${fmtNum(sim.gRem, 2)}g remains unused after maintenance schedule.</div>` : ''}
+            <div class="stat-grid">
+              <div class="stat-box"><div class="k">Loading Used</div><div class="v">${fmtNum(usedLoad, 2)} g</div></div>
+              <div class="stat-box"><div class="k">Maint Available</div><div class="v">${fmtNum(gForMaint, 2)} g</div></div>
+            </div>
+            <div class="breakdown">
+              <div class="breakdown-line"><span>Loading (${fmtNum(loadDays, 1)}d × ${fmtNum(loadG, 2)}g/d)</span><strong>${fmtNum(usedLoad, 2)}g used</strong></div>
+              ${sim.logs.map(l => `<div class="breakdown-line"><span>Maint ${l.label}</span><strong>${l.val}</strong></div>`).join('')}
+            </div>`;
+          return;
+        }
+
+        // Mode 4: Weekly Phase -> Daily Maintenance
+        const wDays = parseStrictFloat(s.m4WeeklyDays);
+        const maintDaily = parseStrictFloat(s.m4MaintDailyG);
+        if (isNaN(wDays) || wDays < 0) {
+          lastSummaryText = '';
+          out.innerHTML = `<div class="panel-title">Supply Result</div><div class="result-hero"><div class="result-label">Waiting</div><div class="result-value">—</div><div class="result-sub">Enter Weekly Phase duration (days).</div></div>`;
+          return;
+        }
+
+        let weeklyDaysActual = 0;
+        let gRemAfterWeekly = totalG;
+        let emptiedInWeekly = false;
+        let wLogs = [];
+
+        if (wDays > 0) {
+          const sim = this.simulateWeekly(totalG, s.m4Weeks, s.m4RepeatLast, wDays);
+          if (sim.error) { lastSummaryText = ''; out.innerHTML = `<div class="panel-title">Supply Result</div><div class="alert-note err">${sim.error}</div>`; return; }
+          if (sim.waiting) { lastSummaryText = ''; out.innerHTML = `<div class="panel-title">Supply Result</div><div class="result-hero"><div class="result-label">Waiting</div><div class="result-value">—</div><div class="result-sub">Enter Weekly Phase grams.</div></div>`; return; }
+          weeklyDaysActual = sim.daysAcc;
+          gRemAfterWeekly = sim.gRem;
+          emptiedInWeekly = sim.emptied;
+          wLogs = sim.logs;
+        }
+
+        if (emptiedInWeekly) {
+          lastSummaryText = `Estradiol Supply (Weekly → Daily)\nTube empties during weekly phase\nExact Total Day Supply: ${fmtNum(weeklyDaysActual, 1)} days`;
+          out.innerHTML = `
+            <div class="panel-title">Supply Result</div>
+            <div class="result-hero warning">
+              <div class="result-label">Empties During Weekly Phase</div>
+              <div class="result-value">${fmtNum(weeklyDaysActual, 1)} days</div>
+              <div class="result-sub">Exact day supply before tube empties (phase target was ${fmtNum(wDays, 1)}d).</div>
+            </div>
+            <div class="breakdown">
+              ${wLogs.map(l => `<div class="breakdown-line"><span>${l.label}</span><strong>${l.val}</strong></div>`).join('')}
+            </div>`;
+          return;
+        }
+
+        if (isNaN(maintDaily) || maintDaily < 0) {
+          lastSummaryText = '';
+          out.innerHTML = `<div class="panel-title">Supply Result</div><div class="result-hero"><div class="result-label">Remaining After Weekly Phase</div><div class="result-value">${fmtNum(gRemAfterWeekly, 2)} g</div><div class="result-sub">Enter Daily Maintenance dose to complete.</div></div>`;
+          return;
+        }
+
+        const maintDays = maintDaily > 0 ? gRemAfterWeekly / maintDaily : 0;
+        const grandDays = roundFix(weeklyDaysActual + maintDays);
+        const usedWeekly = roundFix(totalG - gRemAfterWeekly);
+
+        lastSummaryText = `Estradiol Supply (Weekly → Daily)\nTube: ${fmtNum(totalG, 2)}g\nWeekly Phase (${fmtNum(weeklyDaysActual, 1)}d): ${fmtNum(usedWeekly, 2)}g used\nRemaining for Daily Maint: ${fmtNum(gRemAfterWeekly, 2)}g @ ${fmtNum(maintDaily, 2)}g/d = ${fmtNum(maintDays, 1)}d\nTotal Day Supply: ${fmtNum(grandDays, 1)} days`;
+
+        out.innerHTML = `
+          <div class="panel-title">Supply Result</div>
+          <div class="result-hero success">
+            <div class="result-label">Total Day Supply</div>
+            <div class="result-value">${fmtNum(grandDays, 1)} days</div>
+            <div class="result-sub">${fmtNum(weeklyDaysActual, 1)}d weekly + ${fmtNum(maintDays, 1)}d daily maintenance</div>
+          </div>
+          ${maintDaily === 0 && gRemAfterWeekly > 1e-6 ? `<div class="alert-note warn">Daily maintenance stopped (0 g/day); ${fmtNum(gRemAfterWeekly, 2)}g remains unused.</div>` : ''}
+          <div class="stat-grid">
+            <div class="stat-box"><div class="k">Weekly Phase Used</div><div class="v">${fmtNum(usedWeekly, 2)} g</div></div>
+            <div class="stat-box"><div class="k">Daily Maint Days</div><div class="v">${fmtNum(maintDays, 1)} d</div></div>
+          </div>
+          <div class="breakdown">
+            ${wLogs.map(l => `<div class="breakdown-line"><span>${l.label}</span><strong>${l.val}</strong></div>`).join('')}
+            <div class="breakdown-line"><span>Daily Maint (${fmtNum(gRemAfterWeekly, 2)}g ÷ ${fmtNum(maintDaily, 2)}g/d)</span><strong>+${fmtNum(maintDays, 1)} days</strong></div>
+          </div>`;
+      }
+    };
+
+    /* =========================================================================
+       8. BASIC MATH CALCULATOR (PEMDAS & Left-to-Right + Token-Array Evaluator)
+       ========================================================================= */
+    const BasicMathCalc = {
+      state: {
+        mode: 'pemdas', // 'pemdas' | 'ltr'
+        tokens: [],     // Safe token array: ['-5', '+', '2']
+        current: '0',
+        freshResult: false,
+        tape: []
+      },
+      reset() {
+        this.state.tokens = [];
+        this.state.current = '0';
+        this.state.freshResult = false;
+        this.state.tape = [];
+        this.updateUI();
+      },
+      setMode(m) {
+        vibrate();
+        this.state.mode = m;
+        this.render();
+      },
+      pressDigit(d) {
+        vibrate();
+        const s = this.state;
+        if (s.freshResult || s.current === 'Error') {
+          s.tokens = [];
+          s.current = d;
+          s.freshResult = false;
+        } else if (s.current === '0' || s.current === '') {
+          s.current = d;
+        } else if (s.current === '-0') {
+          s.current = '-' + d;
+        } else {
+          s.current += d;
+        }
+        this.updateUI();
+      },
+      pressDecimal() {
+        vibrate();
+        const s = this.state;
+        if (s.freshResult || s.current === 'Error') {
+          s.tokens = [];
+          s.current = '0.';
+          s.freshResult = false;
+        } else if (s.current === '') {
+          s.current = '0.';
+        } else if (!s.current.includes('.')) {
+          s.current += '.';
+        }
+        this.updateUI();
+      },
+      pressSign() {
+        vibrate();
+        const s = this.state;
+        if (s.current === '0' || s.current === '' || s.current === 'Error') return;
+        s.current = s.current.startsWith('-') ? s.current.slice(1) : '-' + s.current;
+        s.freshResult = false;
+        this.updateUI();
+      },
+      pressPercent() {
+        vibrate();
+        const s = this.state;
+        if (s.current === '' || s.current === 'Error') return;
+        const v = Number(s.current);
+        if (!Number.isFinite(v)) return;
+        s.current = String(parseFloat((v / 100).toPrecision(12)));
+        s.freshResult = false;
+        this.updateUI();
+      },
+      pressOp(op) {
+        vibrate();
+        const s = this.state;
+        if (s.current === 'Error') {
+          s.current = '0';
+          s.tokens = [];
+        }
+        if (s.freshResult) {
+          // Chaining off a negative or positive result stores it cleanly as a single signed token
+          s.tokens = [s.current, op];
+          s.current = '';
+          s.freshResult = false;
+        } else if (s.current === '' && s.tokens.length >= 2) {
+          // Replace trailing operator if user taps a different operator
+          s.tokens[s.tokens.length - 1] = op;
+        } else {
+          s.tokens.push(s.current, op);
+          s.current = '';
+        }
+        this.updateUI();
+      },
+      pressBackspace() {
+        vibrate();
+        const s = this.state;
+        if (s.freshResult || s.current === 'Error') {
+          s.current = '0';
+          s.tokens = [];
+          s.freshResult = false;
+        } else if (s.current.length > 1) {
+          s.current = s.current.slice(0, -1);
+          if (s.current === '-') s.current = '0';
+        } else if (s.current.length === 1 && s.current !== '0') {
+          s.current = s.tokens.length ? '' : '0';
+        } else if (s.tokens.length >= 2) {
+          s.tokens.pop();
+          s.current = s.tokens.pop();
+        }
+        this.updateUI();
+      },
+      pressClear() {
+        vibrate();
+        this.state.tokens = [];
+        this.state.current = '0';
+        this.state.freshResult = false;
+        this.updateUI();
+      },
+      /** Evaluate token array safely in either PEMDAS or Left-to-Right order */
+      evaluateTokens(rawTokens, mode) {
+        const t = rawTokens.slice();
+        if (t.length === 0) return 0;
+        if (t.length === 1) return Number(t[0]);
+
+        if (mode === 'ltr') {
+          let acc = Number(t[0]);
+          for (let i = 1; i < t.length; i += 2) {
+            const op = t[i];
+            const b = Number(t[i + 1]);
+            if (op === '/' && b === 0) return null;
+            if (op === '+') acc += b;
+            else if (op === '-') acc -= b;
+            else if (op === '*') acc *= b;
+            else if (op === '/') acc /= b;
+          }
+          return acc;
+        }
+
+        // Standard PEMDAS: Pass 1 handles * and / ; Pass 2 handles + and -
+        const pass1 = [Number(t[0])];
+        for (let i = 1; i < t.length; i += 2) {
+          const op = t[i];
+          const b = Number(t[i + 1]);
+          if (op === '*' || op === '/') {
+            if (op === '/' && b === 0) return null;
+            const prev = pass1.pop();
+            pass1.push(op === '*' ? prev * b : prev / b);
+          } else {
+            pass1.push(op, b);
+          }
+        }
+        let acc = pass1[0];
+        for (let i = 1; i < pass1.length; i += 2) {
+          acc = pass1[i] === '+' ? acc + pass1[i + 1] : acc - pass1[i + 1];
+        }
+        return acc;
+      },
+      pressEquals() {
+        vibrate();
+        const s = this.state;
+        const full = s.tokens.slice();
+        if (s.current !== '' && s.current !== 'Error') {
+          full.push(s.current);
+        } else if (full.length && ['+', '-', '*', '/'].includes(full[full.length - 1])) {
+          full.pop();
+        }
+        if (!full.length) return;
+
+        const exprPretty = full.map(x => ({ '*': '×', '/': '÷', '-': '−' }[x] || x)).join(' ');
+        const res = this.evaluateTokens(full, s.mode);
+
+        if (res === null || !Number.isFinite(res)) {
+          s.tape.push({ expr: exprPretty, res: 'Error' });
+          s.tokens = [];
+          s.current = 'Error';
+          s.freshResult = true;
+        } else {
+          const clean = Number.isInteger(res) ? String(res) : String(parseFloat(res.toPrecision(12)));
+          s.tape.push({ expr: exprPretty, res: clean });
+          if (s.tape.length > 30) s.tape.shift();
+          s.tokens = [];
+          s.current = clean;
+          s.freshResult = true;
+        }
+        this.updateUI();
+      },
+      useTapeResult(val) {
+        if (val === 'Error') return;
+        vibrate();
+        this.state.current = val;
+        this.state.freshResult = false;
+        this.updateUI();
+      },
+      updateUI() {
+        const s = this.state;
+        const exprEl = document.getElementById('math-expr');
+        const currEl = document.getElementById('math-curr');
+        const tapeEl = document.getElementById('math-tape');
+        if (!exprEl) return;
+
+        exprEl.textContent = s.tokens.map(x => ({ '*': '×', '/': '÷', '-': '−' }[x] || x)).join(' ');
+        currEl.textContent = s.current === '' ? '0' : s.current;
+        tapeEl.innerHTML = s.tape.length
+          ? s.tape.map(t => `
+              <div class="tape-item" onclick="BasicMathCalc.useTapeResult('${escapeHtml(t.res)}')" title="Click to reuse result">
+                <span>${escapeHtml(t.expr)}</span>
+                <strong>= ${escapeHtml(t.res)}</strong>
+              </div>`).join('')
+          : `<div style="font-size:0.78rem;color:var(--text-muted);text-align:center;">History tape (tap any result to reuse)</div>`;
+        tapeEl.scrollTop = tapeEl.scrollHeight;
+      },
+      render() {
+        const m = this.state.mode;
+        document.getElementById('calc-body').innerHTML = `
+          <div class="workspace single-col">
+            <div class="panel math-shell">
+              <div class="tabs" style="margin-bottom:0;">
+                <button class="tab-btn ${m === 'pemdas' ? 'active' : ''}" onclick="BasicMathCalc.setMode('pemdas')">Standard (PEMDAS)</button>
+                <button class="tab-btn ${m === 'ltr' ? 'active' : ''}" onclick="BasicMathCalc.setMode('ltr')">Left-to-Right (Desk)</button>
+              </div>
+              <div class="math-display">
+                <div class="math-tape" id="math-tape"></div>
+                <div class="math-expr" id="math-expr"></div>
+                <div class="math-curr" id="math-curr">0</div>
+              </div>
+              <div class="math-grid">
+                <button class="math-key danger" onclick="BasicMathCalc.pressClear()">C</button>
+                <button class="math-key op" onclick="BasicMathCalc.pressSign()">±</button>
+                <button class="math-key op" onclick="BasicMathCalc.pressPercent()">%</button>
+                <button class="math-key op" onclick="BasicMathCalc.pressOp('/')">÷</button>
+
+                <button class="math-key" onclick="BasicMathCalc.pressDigit('7')">7</button>
+                <button class="math-key" onclick="BasicMathCalc.pressDigit('8')">8</button>
+                <button class="math-key" onclick="BasicMathCalc.pressDigit('9')">9</button>
+                <button class="math-key op" onclick="BasicMathCalc.pressOp('*')">×</button>
+
+                <button class="math-key" onclick="BasicMathCalc.pressDigit('4')">4</button>
+                <button class="math-key" onclick="BasicMathCalc.pressDigit('5')">5</button>
+                <button class="math-key" onclick="BasicMathCalc.pressDigit('6')">6</button>
+                <button class="math-key op" onclick="BasicMathCalc.pressOp('-')">−</button>
+
+                <button class="math-key" onclick="BasicMathCalc.pressDigit('1')">1</button>
+                <button class="math-key" onclick="BasicMathCalc.pressDigit('2')">2</button>
+                <button class="math-key" onclick="BasicMathCalc.pressDigit('3')">3</button>
+                <button class="math-key op" onclick="BasicMathCalc.pressOp('+')">+</button>
+
+                <button class="math-key" onclick="BasicMathCalc.pressDigit('0')">0</button>
+                <button class="math-key" onclick="BasicMathCalc.pressDecimal()">.</button>
+                <button class="math-key" onclick="BasicMathCalc.pressBackspace()">⌫</button>
+                <button class="math-key eq" onclick="BasicMathCalc.pressEquals()">=</button>
+              </div>
+            </div>
+          </div>`;
+        this.updateUI();
+      }
+    };
+
+    const BUILDERS = {
+      ratio: RatioCalc,
+      mtaper: MTaperCalc,
+      prednisone: PrednisoneCalc,
+      control: ControlCalc,
+      refill: RefillCalc,
+      priceadj: PriceAdjCalc,
+      estradiol: EstradiolCalc,
+      basicMath: BasicMathCalc
+    };
+
+    /* =========================================================================
+       GLOBAL KEYBOARD SHORTCUTS
+       ========================================================================= */
+    document.addEventListener('keydown', (e) => {
+      const tag = document.activeElement ? document.activeElement.tagName : '';
+      const inField = tag === 'INPUT' || tag === 'TEXTAREA' || tag === 'SELECT';
+
+      if (e.key === 'Escape' && activeTool !== null) {
+        e.preventDefault();
+        navigate('menu');
+        return;
+      }
+
+      if (activeTool === null && !inField && e.key >= '1' && e.key <= '8') {
+        e.preventDefault();
+        const found = TOOLS[parseInt(e.key, 10) - 1];
+        if (found) navigate(found.id);
+        return;
+      }
+
+      if (activeTool === 'basicMath' && !inField) {
+        if (e.key >= '0' && e.key <= '9') { e.preventDefault(); BasicMathCalc.pressDigit(e.key); }
+        else if (e.key === '.') { e.preventDefault(); BasicMathCalc.pressDecimal(); }
+        else if (['+', '-', '*', '/'].includes(e.key)) { e.preventDefault(); BasicMathCalc.pressOp(e.key); }
+        else if (e.key === '%') { e.preventDefault(); BasicMathCalc.pressPercent(); }
+        else if (e.key === 'Enter' || e.key === '=') { e.preventDefault(); BasicMathCalc.pressEquals(); }
+        else if (e.key === 'Backspace') { e.preventDefault(); BasicMathCalc.pressBackspace(); }
+        else if (e.key === 'c' || e.key === 'C') { e.preventDefault(); BasicMathCalc.pressClear(); }
+      }
+    });
+
+    /* =========================================================================
+       INITIALIZATION
+       ========================================================================= */
+    applyTheme(safeGetStorage('rx_theme', 'dark'));
+    applyFontScale();
+    renderMenu();
+  </script>
+</body>
+</html>
